@@ -1,0 +1,188 @@
+Lithium mailer is a plugin for sending email messages from your li3 application.
+
+### Mailers
+
+Delivering an email message involves multiple components. To provide convenient ways to manage emails the plugin
+introduces the concept of mailers, whose duty is to create and send messages. For this purpose the plugin implements
+a base [ Mailer](li3_mailer/action/Mailer) class which can be subclassed to create mailers with specific options, but also can be used for delivery.
+
+When subclassing the `Mailer` the `$_messages` property may be used to set configuration for every message, or specific
+messages like:
+
+{{{
+class MyMailer extends \li3_mailer\action\Mailer {
+	protected static $_messages = array(
+		array('cc' => array('Me' => 'my@address')),
+		'specific' => array('cc' => array('other@address'))
+	);
+}
+
+// the message will be cc'd to my@address
+MyMailer::deliver('test');
+
+// the message will be cc'd both to my@address and other@address
+MyMailer::deliver('specific');
+
+// the base class also may be used
+use li3_mailer\action\Mailer;
+Mailer::deliver('message');
+}}}
+
+Several options may be configured for creating (like `'from'`, `'to'`, etc.), rendering (like `'data'`, `'layout'`, etc.) and
+delivering (like `'delivery'`, adapter specific transport options, etc.) the message.
+
+### Delivery
+
+Sending an email message is done with the delivery service, which can be configured to handle multiple configurations.
+The configuration may hold options for creating a message (like `'from'`, `'to'`, etc.):
+
+{{{
+use li3_mailer\action\Mailer;
+use li3_mailer\net\mail\Deliver;
+Delivery::config(array(
+    'first' => array('adapter' => 'Simple', 'from' => 'first@address'),
+    'second' => array('adapter' => 'Simple', 'from' => 'second@address')
+));
+
+// send from first@address
+Mailer::deliver('test', array('delivery' => 'first'));
+
+// send from second@address
+Mailer::deliver('test', array('delivery' => 'second'));
+}}}
+
+As with other `Adaptable`-based configurations, each delivery configuration is defined by a name,
+and an array of options for creating the transport adapter. The [ Delivery](li3_mailer/net/mail/Delivery)
+also supports environment-based configuration like:
+
+{{{
+use li3_mailer\net\mail\Deliver;
+Delivery::config(array('default' => array(
+    'production' => array('adapter' => 'Simple'),
+    'development' => array('adapter' => 'Swift')
+)));
+}}}
+
+#### Built-in transport adapters
+
+ - [ **Simple**](li3_mailer/net/mail/transport/adapter/Simple): sends email messages with `PHP`'s built-in function `mail`.
+ - [ **Swift**](li3_mailer/net/mail/transport/adapter/Swift): depends on the [ SwiftMailer](http://swiftmailer.org/) library for sending email messages.
+ - [ **Debug**](li3_mailer/net/mail/transport/adapter/Debug): instead of sending email messages it logs them to a given file or directory.
+
+### Messages
+
+A [ message](li3_mailer/net/mail/Message) object holds all the related information that is needed for rendering and sending. The `Mailer` can be used to
+construct such a message, get a suitable adapter and pass the message to the adapter for delivery. As the examples from earlier have shown there are a
+couple places, where the information stored in the message can be customized, in increasing precedence:
+
+ - in delivery config
+ - in mailer's `$_messages[0]`
+ - in mailer's `$_messages['message_name']`
+ - explicit options (e.g. `$options` arguments for `Mailer::deliver()`)
+
+A message has one special attribute, the `$base_url` property. It is easier to conceive the purpose of this value with understanding
+where it is needed and how it is used:
+
+ - When creating embedded attachments (see later) for example the message may need to generate a Content-ID. For generating this
+   unique id the [ RFC](http://tools.ietf.org/html/rfc2822) recommends the form `timestamp@host`.
+ - When generated URLs in templates (see later) should be absolute with scheme.
+
+Furthermore as sending emails from cron scripts is a common use-case the plugin can not depend on having a web environment, where
+such a value can be determined. For this purpose the message has this property, which can be configured as seen already (e.g. in the
+delivery, the mailer or explicit). To generate correct URLs the `$base_url` should have the format `scheme://host/base` (e.g.
+`http://example.com/my/app`). In addition when the message is initialized it will try to autodetect this setting (so it is possible to
+not specify this option when sending email messages only from web environment).
+
+#### Attachments
+
+A [ message](li3_mailer/net/mail/Message) may have attachments. A simple example with attaching 2 pdf files to the message:
+{{{
+    $attach = array('file1.pdf', '/path/to/file2.pdf');
+    Mailer::deliver('my_message', compact('attach'));
+}}}
+
+The attachment paths may be relative to mail asset path (`app/mails/_assets` by default, determined with `Media`, see later). Apart from
+regular files, attaching remote files (if `allow_url_fopen` is enabled) and explicit content are also possible:
+{{{
+    // attach a remote file
+    $attach = array('http://example.host/file.pdf');
+    Mailer::deliver('my_message', compact('attach'));
+
+    // attach simple content with filename
+    $attach = array(array(
+        'data' => 'this is my content',
+        'filename' => 'cool.txt'
+    ));
+    Mailer::deliver('my_message', compact('attach'));
+
+    // attach image data with content type
+    $img_data = create_custom_image(...);
+    $attach = array(array(
+        'data' => $img_data,
+        'filename' => 'cool.png',
+        'content-type' => 'image/png'
+    ));
+    Mailer::deliver('my_message', compact('attach'));
+}}}
+
+### Templates
+
+Rendering email messsages is similar to rendering responses with a few exceptions. The most important is that instead of having a request
+which can be negotiated to infer the most suitable (single) type for response the email message may have multiple types (and does not have a
+'corresponding' request). To support this the plugin implements a mail [ Media](li3_mailer/net/mail/Media) class simlar to http's [ Media](li3_mailer/net/http/Media),
+which can be used to register new types or configure the built-ins.
+
+The default base path for email templates is `/app/mails` (instead of `/app/views`) to better separate from view templates, however this can be
+configured with the [ Media](li3_mailer/net/mail/Media) class. The exact template will be determined by the message's name and the mailer by default,
+so a command like `Mailer::deliver('test')` would use `/app/mails/test.html.php` for rendering html content, while `FooMailer::deliver('test')` would
+first look for `/app/mails/foo/test.html.php` and fallback to the former only if the latter can not be found. Similarly the former command
+would use the `/app/mails/test.text.php` template for rendering text (plain) content. The default base paths for layouts and elements are
+`/app/mails/layouts' and `/app/mails/elements` respectively.
+
+As with rendering from a controller these defaults may be overriden when sending mail messages:
+{{{
+    // renders /app/mails/test.{:type}.php with default layout (/app/mails/layouts/default.{:type}.php)
+    Mailer::deliver('test');
+
+    // renders /app/mails/other.{:type}.php with default layout
+    Mailer::deliver('test', array('template' => 'other'));
+
+    // renders /app/mails/test.text.php without layout, only text (plain) type
+    Mailer::deliver('test', array('types' => 'text', 'layout' => false));
+}}}
+
+#### Helpers and handlers
+
+The plugin provides similar helpers for mail templates like `lithium` provides for views: the
+[ Html](li3_mailer\template\helper\mail\Html) and [ Form](li3_mailer\template\helper\mail\Form) helpers.
+They provide the same functionality as the view helpers.
+
+The `Html` helper's [ image](li3_mailer\template\helper\mail\Html::image()) method may be used to embed images:
+{{{
+    <p>My image: <?= $this->image('my/image.png'); ?></p>
+}}}
+This will place an <img /> element into the message with its source attribute set to the `Content-ID` that belongs to the attachment.
+
+Creating or replacing a mail template helper is done exactly like regular view helpers with the exception that
+mail helpers are namespaced as `helper\mail\Name` (e.g. should be placed in `app/extensions/helper/mail/Name.php`).
+
+Handlers are very similar to helpers and there is two commonly used handler that behaves a bit different
+in mail templates compared to view templates:
+
+ - The `url` handler will generate absolute URLs by default.
+ - The `path` handler will generate absolute URLs by default and `'cid:ID'` style values for embeds.
+
+#### Referencing the message
+
+In the template context `$this` refers to the `Renderer` object, which exposes the message, so it is
+possible to add or change the subject, add header(s) or attach files:
+{{{
+    <?php $this->message()->subject('My subject); ?>
+    <?php $this->message()->header('Custom', 'header'); ?>
+    <?php $this->message()->attach('file.pdf'); ?>
+}}}
+
+Please note that when the message has multiple types, these methods should be placed in only one template,
+as calling them multiple times will lead to unexpected behavior: for example while the last value will override
+the formers when calling `subject` (rendering order is determined by the message's type order), attaching the
+same file from multiple templates will result in multiple attachments of the same file.
