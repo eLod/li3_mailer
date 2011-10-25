@@ -24,6 +24,17 @@ class MailTest extends \lithium\test\Unit {
 		$this->assertTrue(mb_check_encoding($handler($string), $encoding));
 	}
 
+	public function testEscapeByType() {
+		$expected_unescaped = $string = '<p>Foo, Bar & Baz</p>';
+		$expected_escaped = '&lt;p&gt;Foo, Bar &amp; Baz&lt;/p&gt;';
+		$mail = new Mail(array('type' => 'html'));
+		$handler = $mail->outputFilters['h'];
+		$this->assertEqual($expected_escaped, $handler($string));
+		$mail = new Mail(array('type' => 'text'));
+		$handler = $mail->outputFilters['h'];
+		$this->assertEqual($expected_unescaped, $handler($string));
+	}
+
 	public function testLoadsMailAdapter() {
 		$mail = new MockMail();
 		$this->assertTrue($mail->renderer() instanceof File);

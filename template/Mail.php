@@ -38,14 +38,17 @@ class Mail extends \lithium\template\View {
 	protected function _init() {
 		Object::_init();
 
-		$encoding = 'UTF-8';
-
-		if ($this->_message) {
-			$encoding =& $this->_message->charset;
+		if (isset($this->_config['type']) && ($this->_config['type'] == 'text')) {
+			$h = function($data) { return $data; };
+		} else {
+			$encoding = 'UTF-8';
+			if ($this->_message) {
+				$encoding =& $this->_message->charset;
+			}
+			$h = function($data) use (&$encoding) {
+				return htmlspecialchars((string) $data, ENT_QUOTES, $encoding);
+			};
 		}
-		$h = function($data) use (&$encoding) {
-			return htmlspecialchars((string) $data, ENT_QUOTES, $encoding);
-		};
 		$this->outputFilters += compact('h') + $this->_config['outputFilters'];
 
 		foreach (array('loader', 'renderer') as $key) {
