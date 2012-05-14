@@ -148,7 +148,7 @@ As with rendering from a controller these defaults may be overriden when sending
     Mailer::deliver('test', array('template' => 'other'));
 
     // renders /app/mails/test.text.php without layout, only text (plain) type
-    Mailer::deliver('test', array('types' => 'text', 'layout' => false));
+    Mailer::deliver('test', array('type' => 'text', 'layout' => false));
 }}}
 
 #### Helpers and handlers
