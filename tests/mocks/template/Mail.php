@@ -5,6 +5,7 @@ namespace li3_mailer\tests\mocks\template;
 use li3_mailer\tests\mocks\template\mail\adapter\FileLoader;
 
 class Mail extends \li3_mailer\template\Mail {
+
 	public function renderer() {
 		return $this->_renderer;
 	}

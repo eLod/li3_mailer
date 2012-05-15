@@ -5,13 +5,15 @@ namespace li3_mailer\tests\cases\net\mail;
 use li3_mailer\net\mail\Message;
 
 class MessageTest extends \lithium\test\Unit {
+
 	public function testConstruct() {
-		$config = array('subject', 'date', 'return_path', 'sender', 'from', 'reply_to',
-				'to', 'cc', 'bcc', 'types', 'charset', 'headers', 'body');
-		$config = array_combine($config, array_map(function($name) {
-			return "test {$name}";
-		}, $config));
+		$config = array(
+			'subject', 'date', 'return_path', 'sender', 'from', 'reply_to', 'to',
+			'cc', 'bcc', 'types', 'charset', 'headers', 'body'
+		);
+		$config = array_combine($config, array_map(function($n) { return "test {$n}"; }, $config));
 		$message = new Message($config);
+
 		foreach ($config as $prop => $expected) {
 			$this->assertEqual($expected, $message->$prop);
 		}

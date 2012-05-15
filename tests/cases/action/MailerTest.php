@@ -16,6 +16,7 @@ Mailer::applyFilter('deliver', $filter);
 TestMailer::applyFilter('deliver', $filter);
 
 class MailerTest extends \lithium\test\Unit {
+
 	public function testCreateMessage() {
 		$to = 'foo@bar';
 		$message = Mailer::message(compact('to'));
@@ -41,7 +42,7 @@ class MailerTest extends \lithium\test\Unit {
 		$this->assertEqual('fake rendered message', $message->body('html'));
 		$this->assertEqual('fake rendered message', $message->body('text'));
 		$this->assertFalse(is_null($transport));
-		$this->assertEqual(array('extra' => 'data'), $transport_options);
+		$this->assertEqual(array('extra' => 'data'), $transportOptions);
 	}
 
 	public function testSetsMailer() {
