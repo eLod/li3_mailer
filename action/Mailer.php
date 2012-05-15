@@ -15,6 +15,7 @@ use BadMethodCallException;
  * @see li3_mailer\action\Mailer::deliver()
  */
 class Mailer extends \lithium\core\StaticObject {
+
 	/**
 	 * Holds extra configurations per message (and a default
 	 * for every message at key `0` if set). See `Mailer::_options()`.
@@ -73,7 +74,7 @@ class Mailer extends \lithium\core\StaticObject {
 	 * @see li3_mailer\net\mail\Message
 	 * @see li3_mailer\net\mail\Media::render()
 	 * @see li3_mailer\net\mail\Transport::deliver()
-	 * @param string $message_name Name of the message to send.
+	 * @param string $messageName Name of the message to send.
 	 * @param array $options Options may be:
 	 *        - options for creating the message (see `message()`),
 	 *        - options for rendering the message (see `Media::render()`),
@@ -86,33 +87,36 @@ class Mailer extends \lithium\core\StaticObject {
 	 *          the message).
 	 * @return mixed Return value of the transport adapter's deliver method.
 	 */
-	public static function deliver($message_name, array $options = array()) {
-		$options = static::_options($message_name, $options);
+	public static function deliver($messageName, array $options = array()) {
+		$options = static::_options($messageName, $options);
 
 		$delivery = static::$_classes['delivery'];
-		$delivery_name = isset($options['delivery']) ? $options['delivery'] : 'default';
+		$deliveryName = isset($options['delivery']) ? $options['delivery'] : 'default';
 		unset($options['delivery']);
-		$message_options = $options + $delivery::config($delivery_name);
-		$message = static::message($message_options);
-		$transport = $delivery::adapter($delivery_name);
-		$transport_options = isset($options['transport']) ? (array) $options['transport'] : array();
+
+		$messageOptions = $options + $delivery::config($deliveryName);
+		$message = static::message($messageOptions);
+		$transport = $delivery::adapter($deliveryName);
+
+		$transportOptions = isset($options['transport']) ? (array) $options['transport'] : array();
 		unset($options['transport']);
 
 		$data = isset($options['data']) ? $options['data'] : array();
 		unset($options['data']);
 		$class = get_called_class();
 		$name = preg_replace('/Mailer$/', '', substr($class, strrpos($class, "\\") + 1));
+
 		$options += array(
 			'mailer' => ($name == '' ? null : Inflector::underscore($name)),
-			'template' => $message_name
+			'template' => $messageName
 		);
-
 		$media = static::$_classes['media'];
-		$params = compact('options', 'data', 'message', 'transport', 'transport_options');
+		$params = compact('options', 'data', 'message', 'transport', 'transportOptions');
+
 		return static::_filter(__FUNCTION__, $params, function($self, $params) use ($media) {
 			extract($params);
 			$media::render($message, $data, $options);
-			return $transport->deliver($message, $transport_options);
+			return $transport->deliver($message, $transportOptions);
 		});
 	}
 
@@ -130,25 +134,25 @@ class Mailer extends \lithium\core\StaticObject {
 	 */
 	public static function __callStatic($method, $params) {
 		$found = preg_match('/^deliver(?P<message>\w+)With(?P<delivery>\w+)$/', $method, $args);
+
 		if (!$found) {
 			preg_match('/^deliver(?P<message>\w+)$/', $method, $args);
 		}
-		if ($args) {
-			$message = Inflector::underscore($args['message']);
-			if (isset($params[0]) && is_array($params[0])) {
-				$params = $params[0];
-			}
-			if (isset($args['delivery'])) {
-				$params['delivery'] = Inflector::underscore($args['delivery']);
-			}
-			return static::deliver($message, $params);
-		} else {
+		if (!$args) {
 			$class = get_called_class();
 			$class = substr($class, strrpos($class, "\\") + 1);
-			throw new BadMethodCallException(
-				"Method `{$method}` not defined or handled in class `{$class}`."
-			);
+			$message = "Method `{$method}` not defined or handled in class `{$class}`.";
+			throw new BadMethodCallException($message);
 		}
+		$message = Inflector::underscore($args['message']);
+
+		if (isset($params[0]) && is_array($params[0])) {
+			$params = $params[0];
+		}
+		if (isset($args['delivery'])) {
+			$params['delivery'] = Inflector::underscore($args['delivery']);
+		}
+		return static::deliver($message, $params);
 	}
 
 	/**
@@ -173,6 +177,7 @@ class Mailer extends \lithium\core\StaticObject {
 		if (isset($options[0])) {
 			$to = $options[0];
 			unset($options[0]);
+
 			if (isset($options['data'])) {
 				$options += compact('to');
 			} else {

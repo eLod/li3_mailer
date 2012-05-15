@@ -5,6 +5,7 @@ namespace li3_mailer\tests\cases\net\mail;
 use li3_mailer\net\mail\Grammar;
 
 class GrammarTest extends \lithium\test\Unit {
+
 	public function testToken() {
 		$grammar = array('foo' => 'bar', 'baz' => 'qux');
 		$g = new Grammar(compact('grammar'));

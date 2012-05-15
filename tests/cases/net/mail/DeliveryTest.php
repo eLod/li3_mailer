@@ -6,6 +6,7 @@ use li3_mailer\tests\mocks\net\mail\DeliveryWithPath;
 use li3_mailer\net\mail\Transport;
 
 class DeliveryTest extends \lithium\test\Unit {
+
 	public function testUsesGoodAdapters() {
 		$params = array(array('adapter' => 'Simple'), DeliveryWithPath::_adaptersPath());
 		$class = DeliveryWithPath::invokeMethod('_class', $params);

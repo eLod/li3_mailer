@@ -8,6 +8,7 @@ use li3_mailer\tests\mocks\template\Mail;
 use lithium\core\Libraries;
 
 class MediaTest extends \lithium\test\Unit {
+
 	public function testType() {
 		$this->assertEqual('text/plain', Media::type('text'));
 		$this->assertEqual('text/html', Media::type('html'));
@@ -89,10 +90,12 @@ class MediaTest extends \lithium\test\Unit {
 		$this->assertTrue($view instanceof Mail);
 		$loader = $view->loader();
 		$template = $loader->template('template', $options);
-		$this->assertEqual(array(
+
+		$expected = array(
 			LITHIUM_APP_PATH . '/mails/bar/foo.text.php',
 			LITHIUM_APP_PATH . '/mails/foo.text.php'
-		), $template);
+		);
+		$this->assertEqual($expected, $template);
 
 		Media::type('foo', false);
 	}
@@ -128,18 +131,17 @@ class MediaTest extends \lithium\test\Unit {
 			'https://foo.local' => array('HTTP_HOST' => 'foo.local', 'HTTPS' => true),
 			'http://foo.local/base' => array('HTTP_HOST' => 'foo.local', 'base' => '/base')
 		);
+
 		foreach ($tests as $base_url => $expect) {
 			$message = new Message(compact('base_url'));
 			$request = Media::invokeMethod('_request', array($message));
 			$expect += array('HTTPS' => false, 'base' => '');
+
 			foreach ($expect as $key => $expected) {
 				$result = $request->env($key);
-				$this->assertEqual(
-					$expected,
-					$result,
-					"`{$key}` failed for {$base_url} ({$message->base_url}),"
-					. " expected: `{$expected}`, result: `{$result}`"
-				);
+				$msg = "`{$key}` failed for {$base_url} ({$message->base_url}),";
+				$msg .= " expected: `{$expected}`, result: `{$result}`";
+				$this->assertEqual($expected, $result, $msg);
 			}
 		}
 	}

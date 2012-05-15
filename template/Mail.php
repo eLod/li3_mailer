@@ -12,6 +12,7 @@ use lithium\core\Libraries;
  * @see lithium\template\View
  */
 class Mail extends \lithium\template\View {
+
 	/**
 	 * Holds a reference to the `Message` object that will be delivered. Allows headers
 	 * and other message attributes to be assigned in the templating layer.

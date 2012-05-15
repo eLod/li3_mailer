@@ -3,6 +3,7 @@
 namespace li3_mailer\tests\mocks\template\mail;
 
 class Compiler extends \li3_mailer\template\mail\Compiler {
+
 	public function renderer() {
 		return $this->_renderer;
 	}
