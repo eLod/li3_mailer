@@ -47,6 +47,7 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 	 * @return mixed The return value of the `deliver` function.
 	 */
 	public function deliver($message, array $options = array()) {
+		//$this->debug($message);
 		$config = $this->_config;
 		$headers = $message->headers;
 		foreach ($this->_message_addresses as $property => $header) {
@@ -127,8 +128,8 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 			'to' => $to,
 			//'o:campaign' => '860s', // ADD THIS FOR A CAMPAIGN
 			'subject' => $message->subject,
-			//'text' => $body, // USE THIS FOR TEXT ONLY EMAIL
-			'html' => $body // USE THIS FOR HTML EMAIL
+			'text' => $message->body('text'), // USE THIS FOR TEXT ONLY EMAIL
+			'html' => $message->body('html') // USE THIS FOR HTML EMAIL
 		);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 		curl_exec($ch);
