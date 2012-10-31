@@ -159,5 +159,6 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 		curl_exec($ch);
 		curl_close($ch);
 	}
+}
 
 ?>
