@@ -143,6 +143,15 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 		if(isset($message->campaign)){
 			$data['o:campaign'] = $message->campaign;
 		}
+		//TAGS is always an array
+		if(isset($message->tags) && is_array($message->tags) && count($message->tags)){
+			$i = 1;
+			foreach($message->tags as $tag){
+				$data["o:tag[$i]"] = $tag;
+				$i++;
+			}
+		}
+		
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 		curl_exec($ch);
 		curl_close($ch);
