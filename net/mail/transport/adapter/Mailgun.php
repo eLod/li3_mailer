@@ -47,7 +47,6 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 	 * @return mixed The return value of the `deliver` function.
 	 */
 	public function deliver($message, array $options = array()) {
-		//$this->debug($message);
 		$config = $this->_config;
 		$headers = $message->headers;
 		foreach ($this->_message_addresses as $property => $header) {
@@ -156,19 +155,5 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 		curl_exec($ch);
 		curl_close($ch);
 	}
-	
-	/**
-	 * Debugging helper to test headers, by wrapping output in a
-	 * nice purdy white background and so on.
-	 * 
-	 * @param object What you want to see
-	*/
-	function debug( $thingy ){
-		echo '<div class="span9 well" style="margin-left:0;"><pre>';
-		print_r( $thingy );
-		echo '</pre></div>';
-		exit;
-	}
-}
 
 ?>
