@@ -127,10 +127,17 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 			'from' => $message->from,
 			'to' => $to,
 			//'o:campaign' => '860s', // ADD THIS FOR A CAMPAIGN
-			'subject' => $message->subject,
-			'text' => $message->body('text'), // USE THIS FOR TEXT ONLY EMAIL
-			'html' => $message->body('html') // USE THIS FOR HTML EMAIL
+			'subject' => $message->subject
 		);
+		if(isset($message->body('text'))){ 					// USE THIS FOR TEXT ONLY EMAIL
+			array_push($data,array('text' => $message->body('text')));
+		}
+		if(isset($message->body('html'))){ 			 // USE THIS FOR HTML EMAIL
+			array_push($data ,array('html' => $message->body('html')));
+		}
+		if(isset($message->campaign)){
+			array_push($data ,array('o:campaign' => $message->campaign));
+		}
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 		curl_exec($ch);
 		curl_close($ch);
