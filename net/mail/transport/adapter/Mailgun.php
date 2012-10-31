@@ -120,7 +120,7 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 		$to = $this->address($message->to);
 
 		// Setup and execute via CURL extension
-		$ch = curl_init($config['url']);
+		$ch = curl_init($config['url'] . 'messages');
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_USERPWD, $config['key']);
 		$data = array(
@@ -129,14 +129,16 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 			//'o:campaign' => '860s', // ADD THIS FOR A CAMPAIGN
 			'subject' => $message->subject
 		);
-		if(isset($message->body('text'))){ 					// USE THIS FOR TEXT ONLY EMAIL
-			array_push($data,array('text' => $message->body('text')));
+		$text = $message->body('text');
+		if(isset($text)){ 					// USE THIS FOR TEXT ONLY EMAIL
+			$data['text'] = $text;
 		}
-		if(isset($message->body('html'))){ 			 // USE THIS FOR HTML EMAIL
-			array_push($data ,array('html' => $message->body('html')));
+		$html = $message->body('html');
+		if(isset($html)){ 			 // USE THIS FOR HTML EMAIL
+			$data['html'] = $html;
 		}
 		if(isset($message->campaign)){
-			array_push($data ,array('o:campaign' => $message->campaign));
+			$data['o:campaign'] = $message->campaign;
 		}
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 		curl_exec($ch);
