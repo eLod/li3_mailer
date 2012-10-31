@@ -151,6 +151,10 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 			}
 		}
 		
+		if(isset($message->testmode)){
+			$data['o:testmode'] = $message->testmode;
+		}
+		
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 		curl_exec($ch);
 		curl_close($ch);
