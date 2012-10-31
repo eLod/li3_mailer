@@ -129,14 +129,17 @@ class Mailgun extends \li3_mailer\net\mail\Transport {
 			//'o:campaign' => '860s', // ADD THIS FOR A CAMPAIGN
 			'subject' => $message->subject
 		);
+		// USE THIS FOR TEXT EMAIL
 		$text = $message->body('text');
-		if(isset($text)){ 					// USE THIS FOR TEXT ONLY EMAIL
+		if(isset($text)){
 			$data['text'] = $text;
 		}
+		// USE THIS FOR HTML EMAIL
 		$html = $message->body('html');
-		if(isset($html)){ 			 // USE THIS FOR HTML EMAIL
+		if(isset($html)){
 			$data['html'] = $html;
 		}
+		// USE THIS FOR CAMPAIGNS
 		if(isset($message->campaign)){
 			$data['o:campaign'] = $message->campaign;
 		}
