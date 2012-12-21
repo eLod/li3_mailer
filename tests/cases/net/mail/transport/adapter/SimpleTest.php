@@ -19,13 +19,13 @@ class SimpleTest extends \lithium\test\Unit {
 		$this->assertEqual('foo@bar', $to);
 		$this->assertEqual('test subject', $subject);
 		$this->assertEqual('test body', $body);
-		$this->assertPattern('/(^|\r\n)From: valid@address(\r\n|$)/', $headers);
-		$this->assertPattern('/(^|\r\n)MIME-Version: 1.0(\r\n|$)/', $headers);
-		$this->assertPattern(
+		$this->assertPatternRaw('/(^|\r\n)From: valid@address(\r\n|$)/', $headers);
+		$this->assertPatternRaw('/(^|\r\n)MIME-Version: 1.0(\r\n|$)/', $headers);
+		$this->assertPatternRaw(
 			'/(^|\r\n)Content-Type: text\/plain;charset="' . $message->charset . '"(\r\n|$)/',
 			$headers
 		);
-		$this->assertPattern('/(^|\r\n)Custom: foo(\r\n|$)/', $headers);
+		$this->assertPatternRaw('/(^|\r\n)Custom: foo(\r\n|$)/', $headers);
 	}
 
 	public function testHtmlMessage() {
@@ -40,9 +40,9 @@ class SimpleTest extends \lithium\test\Unit {
 		$this->assertEqual('foo@bar', $to);
 		$this->assertEqual('test subject', $subject);
 		$this->assertEqual('<b>test body</b>', $body);
-		$this->assertPattern('/(^|\r\n)From: valid@address(\r\n|$)/', $headers);
-		$this->assertPattern('/(^|\r\n)MIME-Version: 1.0(\r\n|$)/', $headers);
-		$this->assertPattern(
+		$this->assertPatternRaw('/(^|\r\n)From: valid@address(\r\n|$)/', $headers);
+		$this->assertPatternRaw('/(^|\r\n)MIME-Version: 1.0(\r\n|$)/', $headers);
+		$this->assertPatternRaw(
 			'/(^|\r\n)Content-Type: text\/html;charset="' . $message->charset . '"(\r\n|$)/',
 			$headers
 		);
@@ -69,9 +69,9 @@ class SimpleTest extends \lithium\test\Unit {
 			'/\nContent-Type: text\/html;charset="' . $charset . '"\n\n<b>test html body<\/b>\n/',
 			$body
 		);
-		$this->assertPattern('/(^|\r\n)From: valid@address(\r\n|$)/', $headers);
-		$this->assertPattern('/(^|\r\n)MIME-Version: 1.0(\r\n|$)/', $headers);
-		$this->assertPattern(
+		$this->assertPatternRaw('/(^|\r\n)From: valid@address(\r\n|$)/', $headers);
+		$this->assertPatternRaw('/(^|\r\n)MIME-Version: 1.0(\r\n|$)/', $headers);
+		$this->assertPatternRaw(
 			'/(^|\r\n)Content-Type: multipart\/alternative;boundary="[^"]+"(\r\n|$)/',
 			$headers
 		);
@@ -110,6 +110,11 @@ class SimpleTest extends \lithium\test\Unit {
 		)));
 		$this->expectException('/^Can not attach path `\/foo\/bar`\.$/');
 		$simple->deliver($message);
+	}
+
+	// assertPattern escapes \r, see lithium\test\Unit's assertPattern() and _normalizeLineEndings()
+	public function assertPatternRaw($expected, $result, $message = '{:message}') {
+		$this->assert(!!preg_match($expected, $result), $message, compact('expected', 'result'));
 	}
 }
 
