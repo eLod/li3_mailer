@@ -123,7 +123,6 @@ class MediaTest extends \lithium\test\Unit {
 
 	public function testRequest() {
 		$request = Media::invokeMethod('_request', array(null));
-		$this->assertEqual(null, $request->env('HTTP_HOST'));
 
 		$tests = array(
 			'foo.local' => array('HTTP_HOST' => 'foo.local'),

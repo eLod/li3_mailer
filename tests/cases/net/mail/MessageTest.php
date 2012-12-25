@@ -3,6 +3,7 @@
 namespace li3_mailer\tests\cases\net\mail;
 
 use li3_mailer\net\mail\Message;
+use lithium\action\Request;
 
 class MessageTest extends \lithium\test\Unit {
 
@@ -128,7 +129,7 @@ class MessageTest extends \lithium\test\Unit {
 		$message = new Message(array('base_url' => 'foo.local'));
 		$this->assertPattern('/^[^@]+@foo.local$/', $message->invokeMethod('randomId'));
 		$message = new Message();
-		$this->assertPattern('/^[^@]+@li3_mailer.generated$/', $message->invokeMethod('randomId'));
+		$this->assertPattern('/^[^@]+@' . $this->_base() . '$/', $message->invokeMethod('randomId'));
 		$message = new Message(array('base_url' => 'foo@local'));
 		$this->assertPattern('/^[^@]+@li3_mailer.generated$/', $message->invokeMethod('randomId'));
 	}
@@ -224,11 +225,16 @@ class MessageTest extends \lithium\test\Unit {
 	public function testEmbed() {
 		$message = new Message();
 		$result = $message->embed('foo/bar', array('check' => false));
-		$this->assertPattern('/^[^@]+@li3_mailer.generated$/', $result);
+		$this->assertPattern('/^[^@]+@' . $this->_base() . '$/', $result);
 		$attachments = $message->attachments();
 		$this->assertEqual(1, count($attachments));
 		$this->assertEqual('foo/bar', $attachments[0]['attach_path']);
 		$this->assertEqual('inline', $attachments[0]['disposition']);
+	}
+
+	protected function _base() {
+		$request = new Request();
+		return $request->env('HTTP_HOST') ?: 'li3_mailer.generated';
 	}
 }
 
