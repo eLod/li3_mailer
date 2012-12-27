@@ -67,6 +67,7 @@ Delivery::config(array('default' => array(
 
  - [ **Simple**](li3_mailer/net/mail/transport/adapter/Simple): sends email messages with `PHP`'s built-in function `mail`.
  - [ **Swift**](li3_mailer/net/mail/transport/adapter/Swift): depends on the [ SwiftMailer](http://swiftmailer.org/) library for sending email messages.
+ - [ **Mailgun**](li3_mailer/net/mail/transport/adapter/Mailgun): uses the [ Mailgun](http://www.mailgun.com/) hosted service to send email messages (depends on cURL).
  - [ **Debug**](li3_mailer/net/mail/transport/adapter/Debug): instead of sending email messages it logs them to a given file or directory.
 
 ### Messages
