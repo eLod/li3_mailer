@@ -8,15 +8,15 @@ use lithium\core\Libraries;
 use lithium\core\ClassNotFoundException;
 
 /**
- * The `File` adapter for mail messages is a modified view adapter of the same name
- * that is suitable for rendering mail messages instead of http responses.
+ * The `File` adapter for mail messages is a modified view adapter of the same
+ * name that is suitable for rendering mail messages instead of http responses.
  *
  * @see lithium\template\view\adapter\File
  */
 class File extends \lithium\template\view\adapter\File {
 	/**
-	 * These configuration variables will automatically be assigned to their corresponding protected
-	 * properties when the object is initialized.
+	 * These configuration variables will automatically be assigned to their
+	 * corresponding protected properties when the object is initialized.
 	 *
 	 * @var array
 	 */
@@ -26,18 +26,21 @@ class File extends \lithium\template\view\adapter\File {
 	);
 
 	/**
-	 * Context values that exist across all templates rendered in this context.  These values
-	 * are usually rendered in the layout template after all other values have rendered.
+	 * Context values that exist across all templates rendered in this context.
+	 * These values are usually rendered in the layout template after all other
+	 * values have rendered.
 	 *
 	 * @var array
 	 */
 	protected $_context = array(
-		'content' => '', 'scripts' => array(), 'styles' => array(), 'head' => array()
+		'content' => '', 'scripts' => array(),
+		'styles' => array(), 'head' => array()
 	);
 
 	/**
-	 * `File`'s dependencies. These classes are used by the output handlers to generate URLs
-	 * for dynamic resources and static assets, as well as compiling the templates.
+	 * `File`'s dependencies. These classes are used by the output handlers to
+	 * generate URLs for dynamic resources and static assets, as well as
+	 * compiling the templates.
 	 *
 	 * @see Renderer::$_handlers
 	 * @var array
@@ -46,7 +49,7 @@ class File extends \lithium\template\view\adapter\File {
 		'compiler' => 'li3_mailer\template\mail\Compiler',
 		'router' => 'lithium\net\http\Router',
 		'media'  => 'li3_mailer\net\mail\Media',
-		'web_media'  => 'lithium\net\http\Media'
+		'http_media'  => 'lithium\net\http\Media'
 	);
 
 	/**
@@ -64,7 +67,8 @@ class File extends \lithium\template\view\adapter\File {
 	 * - `strings`: String templates used by helpers.
 	 * - `handlers`: An array of output handlers for string template inputs.
 	 * - `message`: The `Message` object associated with this renderer.
-	 * - `context`: An array of the current rendering context data, like `content`.
+	 * - `context`: An array of the current rendering context data,
+	 *   like `content`.
 	 *
 	 * @param array $config
 	 */
@@ -82,34 +86,39 @@ class File extends \lithium\template\view\adapter\File {
 	/**
 	 * Sets the default output handlers for string template inputs.
 	 *
+	 * Please note: skips lithium\template\view\Renderer::_init()
+	 * to skip setting handlers.
+	 *
 	 * @return void
 	 */
 	protected function _init() {
-		Object::_init(); //do not set handlers from View's Renderer
+		Object::_init();
 
 		$classes =& $this->_classes;
 		$message =& $this->_message;
 		if (!$this->_request && $message) {
-			$this->_request = $classes['media']::invokeMethod('_request', array($message));
+			$media = $classes['media'];
+			$this->_request = $media::invokeMethod('_request', array($message));
 		}
 		$request =& $this->_request;
 		$context =& $this->_context;
 		$h = $this->_view ? $this->_view->outputFilters['h'] : null;
 
 		$this->_handlers += array(
-			'url' => function($url, $ref, array $options = array()) use (&$classes, &$request, $h) {
-				$defaults = array('absolute' => true);
-				$url = $classes['router']::match($url ?: '', $request, $options + $defaults);
+			'url' => function($url, $ref, array $options = array())
+					use ($classes, &$request, $h) {
+				$router = $classes['router'];
+				$options += array('absolute' => true);
+				$url = $router::match($url ?: '', $request, $options);
 				return $h ? str_replace('&amp;', '&', $h($url)) : $url;
 			},
-			'path' => function
-			($path, $ref, array $options = array()) use (&$classes, &$request, &$message) {
+			'path' => function($path, $ref, array $options = array())
+					use ($classes, &$request, &$message) {
 				$embed = isset($options['embed']) && $options['embed'];
 				unset($options['embed']);
 				if ($embed) {
 					return 'cid:' . $message->embed($path, $options);
 				} else {
-					$defaults = array('base' => $request ? $request->env('base') : '');
 					$type = 'generic';
 
 					if (is_array($ref) && $ref[0] && $ref[1]) {
@@ -117,11 +126,15 @@ class File extends \lithium\template\view\adapter\File {
 						list($class, $method) = explode('::', $methodRef);
 						$type = $helper->contentMap[$method];
 					}
-					$path = $classes['web_media']::asset($path, $type, $options + $defaults);
-					if ($path[0] == '/') {
+					$httpMedia = $classes['http_media'];
+					$base = $request ? $request->env('base') : '';
+					$options += compact('base');
+					$path = $httpMedia::asset($path, $type, $options);
+					if ($path[0] === '/') {
 						$host = '';
 						if ($request) {
-							$host .= $request->env('HTTPS') ? 'https://' : 'http://';
+							$https = $request->env('HTTPS') ? 's' : '';
+							$host .= "http{$https}://";
 							$host .= $request->env('HTTP_HOST');
 						}
 						$path = $host . $path;
@@ -148,16 +161,17 @@ class File extends \lithium\template\view\adapter\File {
 	/**
 	 * Returns the `Message` object associated with this rendering context.
 	 *
-	 * @return object Returns an instance of `li3_mailer\net\mail\Message`, which provides the i.e.
-	 *         the encoding for the document being the result of templates rendered by this context.
+	 * @return object Returns an instance of `li3_mailer\net\mail\Message`,
+	 *         which provides the i.e. the encoding for the document being
+	 *         the result of templates rendered by this context.
 	 */
 	public function message() {
 		return $this->_message;
 	}
 
 	/**
-	 * Brokers access to helpers attached to this rendering context, and loads helpers on-demand if
-	 * they are not available.
+	 * Brokers access to helpers attached to this rendering context, and loads
+	 * helpers on-demand if they are not available.
 	 *
 	 * @param string $name Helper name
 	 * @param array $config
@@ -169,7 +183,8 @@ class File extends \lithium\template\view\adapter\File {
 		}
 		try {
 			$config += array('context' => $this);
-			$helper = Libraries::instance('helper.mail', ucfirst($name), $config);
+			$path = 'helper.mail';
+			$helper = Libraries::instance($path, ucfirst($name), $config);
 			return $this->_helpers[$name] = $helper;
 		} catch (ClassNotFoundException $e) {
 			throw new RuntimeException("Mail helper `{$name}` not found.");
@@ -177,23 +192,30 @@ class File extends \lithium\template\view\adapter\File {
 	}
 
 	/**
-	 * Shortcut method used to render elements and other nested templates from inside the templating
-	 * layer.
+	 * Shortcut method used to render elements and other nested templates from
+	 * inside the templating layer.
 	 *
-	 * @param string $type The type of template to render, usually either `'element'` or
-	 *               `'template'`. Indicates the process used to render the content. See
-	 *               `lithium\template\View::$_processes` for more info.
-	 * @param string $template The template file name. For example, if `'header'` is passed, and
-	 *               `$type` is set to `'element'`, then the template rendered will be
-	 *               `views/elements/header.html.php` (assuming the default configuration).
-	 * @param array $data An array of any other local variables that should be injected into the
-	 *              template. By default, only the values used to render the current template will
-	 *              be sent. If `$data` is non-empty, both sets of variables will be merged.
+	 * @param string $type The type of template to render, usually either
+	 *               `'element'` or `'template'`. Indicates the process used to
+	 *               render the content.
+	 *               See `lithium\template\View::$_processes` for more info.
+	 * @param string $template The template file name. For example, if
+	 *               `'header'` is passed, and `$type` is set to `'element'`,
+	 *               then the template rendered will be
+	 *               `views/elements/header.html.php`
+	 *               (assuming the default configuration).
+	 * @param array $data An array of any other local variables that should be
+	 *              injected into the template. By default, only the values used
+	 *              to render the current template will be sent. If `$data` is
+	 *              non-empty, both sets of variables will be merged.
 	 * @param array $options Any options accepted by `template\View::render()`.
 	 * @return string Returns a the rendered template content as a string.
 	 */
-	protected function _render($type, $template, array $data = array(), array $options = array()) {
-		return $this->_view->render($type, $data + $this->_data, compact('template') + $options);
+	protected function _render($type, $template, array $data = array(),
+					array $options = array()) {
+		$data += $this->_data;
+		$options = compact('template') + $options;
+		return $this->_view->render($type, $data, $options);
 	}
 }
 

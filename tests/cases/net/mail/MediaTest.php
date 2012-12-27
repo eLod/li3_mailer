@@ -30,8 +30,11 @@ class MediaTest extends \lithium\test\Unit {
 	}
 
 	public function testRenderWithView() {
-		Media::type('foo', 'bar', array('view' => 'li3_mailer\tests\mocks\template\Mail'));
-		$message = new Message(array('from' => 'valid@address', 'types' => 'foo'));
+		$options = array('view' => 'li3_mailer\tests\mocks\template\Mail');
+		Media::type('foo', 'bar', $options);
+		$message = new Message(array(
+			'from' => 'valid@address', 'types' => 'foo'
+		));
 		Media::render($message);
 		$this->assertEqual('fake rendered message', $message->body('foo'));
 		Media::type('foo', false);
@@ -39,15 +42,20 @@ class MediaTest extends \lithium\test\Unit {
 
 	public function testBadHandler() {
 		Media::type('foo', 'bar', array('view' => false, 'template' => false));
-		$message = new Message(array('from' => 'valid@address', 'types' => 'foo'));
-		$this->expectException('Could not interpret type settings for handler.');
+		$message = new Message(array(
+			'from' => 'valid@address', 'types' => 'foo'
+		));
+		$this->expectException(
+			'Could not interpret type settings for handler.'
+		);
 		Media::render($message);
 		Media::type('foo', false);
 	}
 
 	public function testView() {
 		$message = new Message();
-		Media::type('foo', 'bar', array('view' => 'li3_mailer\tests\mocks\template\Mail'));
+		$options = array('view' => 'li3_mailer\tests\mocks\template\Mail');
+		Media::type('foo', 'bar', $options);
 		$view = Media::view('foo', array(), $message);
 		$this->assertTrue($view instanceof Mail);
 		$this->assertEqual($message, $view->message());
@@ -60,30 +68,33 @@ class MediaTest extends \lithium\test\Unit {
 			'view' => 'li3_mailer\tests\mocks\template\Mail',
 			'template' => null
 		));
-		$base_handler = Media::invokeMethod('_handlers', array('foo'));
-		$base_handler += Media::invokeMethod('_handlers', array('default'));
-		$base_handler += array('compile' => false);
+		$baseHandler = Media::invokeMethod('_handlers', array('foo'));
+		$baseHandler += Media::invokeMethod('_handlers', array('default'));
+		$baseHandler += array('compile' => false);
 
-		$handler = $base_handler;
+		$handler = $baseHandler;
 		$options = array(
-			'library' => true, 'mailer' => null, 'template' => 'foo', 'type' => 'text'
+			'library' => true, 'mailer' => null,
+			'template' => 'foo', 'type' => 'text'
 		);
 		$handler['paths'] = Media::invokeMethod(
-			'_finalize_paths',
+			'_finalizePaths',
 			array($handler['paths'], $options)
 		);
 		$view = Media::view($handler, array(), $message);
 		$this->assertTrue($view instanceof Mail);
 		$loader = $view->loader();
 		$template = $loader->template('template', $options);
-		$this->assertEqual(array(LITHIUM_APP_PATH . '/mails/foo.text.php'), $template);
+		$expected = array(LITHIUM_APP_PATH . '/mails/foo.text.php');
+		$this->assertEqual($expected, $template);
 
-		$handler = $base_handler;
+		$handler = $baseHandler;
 		$options = array(
-			'library' => true, 'mailer' => 'bar', 'template' => 'foo', 'type' => 'text'
+			'library' => true, 'mailer' => 'bar',
+			'template' => 'foo', 'type' => 'text'
 		);
 		$handler['paths'] = Media::invokeMethod(
-			'_finalize_paths',
+			'_finalizePaths',
 			array($handler['paths'], $options)
 		);
 		$view = Media::view($handler, array(), $message);
@@ -108,15 +119,20 @@ class MediaTest extends \lithium\test\Unit {
 
 	public function testAsset() {
 		$result = Media::asset('foo/bar');
-		$this->assertEqual(LITHIUM_APP_PATH . '/mails/_assets/foo/bar', $result);
+		$expected = LITHIUM_APP_PATH . '/mails/_assets/foo/bar';
+		$this->assertEqual($expected, $result);
+
 		Libraries::add('foo', array('path' => '/a/path'));
 		$result = Media::asset('foo/bar', array('library' => 'foo'));
 		$this->assertEqual('/a/path/mails/_assets/foo/bar', $result);
 		Libraries::remove('foo');
+
 		$result = Media::asset('/foo/bar');
 		$this->assertEqual('/foo/bar', $result);
+
 		$result = Media::asset('http://example.com/foo/bar');
 		$this->assertEqual('http://example.com/foo/bar', $result);
+
 		$result = Media::asset('foo/bar', array('check' => true));
 		$this->assertFalse($result);
 	}
@@ -127,18 +143,22 @@ class MediaTest extends \lithium\test\Unit {
 		$tests = array(
 			'foo.local' => array('HTTP_HOST' => 'foo.local'),
 			'http://foo.local' => array('HTTP_HOST' => 'foo.local'),
-			'https://foo.local' => array('HTTP_HOST' => 'foo.local', 'HTTPS' => true),
-			'http://foo.local/base' => array('HTTP_HOST' => 'foo.local', 'base' => '/base')
+			'https://foo.local' => array(
+				'HTTP_HOST' => 'foo.local', 'HTTPS' => true
+			),
+			'http://foo.local/base' => array(
+				'HTTP_HOST' => 'foo.local', 'base' => '/base'
+			)
 		);
 
-		foreach ($tests as $base_url => $expect) {
-			$message = new Message(compact('base_url'));
+		foreach ($tests as $baseURL => $expect) {
+			$message = new Message(compact('baseURL'));
 			$request = Media::invokeMethod('_request', array($message));
 			$expect += array('HTTPS' => false, 'base' => '');
 
 			foreach ($expect as $key => $expected) {
 				$result = $request->env($key);
-				$msg = "`{$key}` failed for {$base_url} ({$message->base_url}),";
+				$msg = "`{$key}` failed for {$baseURL} ({$message->baseURL}),";
 				$msg .= " expected: `{$expected}`, result: `{$result}`";
 				$this->assertEqual($expected, $result, $msg);
 			}

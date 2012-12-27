@@ -32,19 +32,24 @@ class Grammar extends \lithium\core\Object {
 	 */
 	public function __construct(array $config = array()) {
 		$grammar = array();
-		//Basic building blocks
 		$grammar['NO-WS-CTL'] = '[\x01-\x08\x0B\x0C\x0E-\x19\x7F]';
 		$grammar['text'] = '[\x00-\x08\x0B\x0C\x0E-\x7F]';
 		$grammar['quoted-pair'] = "(?:\\\\{$grammar['text']})";
-		$grammar['qtext'] = "(?:{$grammar['NO-WS-CTL']}|" . '[\x21\x23-\x5B\x5D-\x7E])';
+		$grammar['qtext'] = "(?:{$grammar['NO-WS-CTL']}|" .
+					'[\x21\x23-\x5B\x5D-\x7E])';
 		$grammar['atext'] = '[a-zA-Z0-9!#\$%&\'\*\+\-\/=\?\^_`\{\}\|~]';
-		$grammar['dot-atom-text'] = "(?:{$grammar['atext']}+(\.{$grammar['atext']}+)*)";
-		$grammar['no-fold-quote'] = "(?:\"(?:{$grammar['qtext']}|{$grammar['quoted-pair']})*\")";
-		$grammar['dtext'] = "(?:{$grammar['NO-WS-CTL']}|" . '[\x21-\x5A\x5E-\x7E])';
-		$grammar['no-fold-literal'] = "(?:\[(?:{$grammar['dtext']}|{$grammar['quoted-pair']})*\])";
-		//Message IDs
-		$grammar['id-left'] = "(?:{$grammar['dot-atom-text']}|{$grammar['no-fold-quote']})";
-		$grammar['id-right'] = "(?:{$grammar['dot-atom-text']}|{$grammar['no-fold-literal']})";
+		$grammar['dot-atom-text'] = "(?:{$grammar['atext']}+" .
+						"(\.{$grammar['atext']}+)*)";
+		$grammar['no-fold-quote'] = "(?:\"(?:{$grammar['qtext']}|" .
+						"{$grammar['quoted-pair']})*\")";
+		$grammar['dtext'] = "(?:{$grammar['NO-WS-CTL']}|" .
+					'[\x21-\x5A\x5E-\x7E])';
+		$grammar['no-fold-literal'] = "(?:\[(?:{$grammar['dtext']}|" .
+						"{$grammar['quoted-pair']})*\])";
+		$grammar['id-left'] = "(?:{$grammar['dot-atom-text']}|" .
+					"{$grammar['no-fold-quote']})";
+		$grammar['id-right'] = "(?:{$grammar['dot-atom-text']}|" .
+					"{$grammar['no-fold-literal']})";
 		$provided = isset($config['grammar']) ? $config['grammar'] : null;
 		$grammar = array_merge_recursive($grammar, (array) $provided);
 		parent::__construct(compact('grammar') + $config);
@@ -81,8 +86,9 @@ class Grammar extends \lithium\core\Object {
 	 * @return boolean Result.
 	 */
 	public function isValidId($id) {
-		$preg = '/^' . $this->token('id-left') . '@' . $this->token('id-right') . '$/D';
-		return (boolean) preg_match($preg, $id);
+		$address = $this->token('id-left') . '@' . $this->token('id-right');
+		$pattern = '/^' . $address . '$/D';
+		return (boolean) preg_match($pattern, $id);
 	}
 }
 

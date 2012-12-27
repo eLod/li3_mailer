@@ -26,7 +26,9 @@ class FileTest extends \lithium\test\Unit {
 	public function testInitialization() {
 		$file = new File();
 
-		$expected = array('url', 'path', 'options', 'title', 'scripts', 'styles', 'head');
+		$expected = array(
+			'url', 'path', 'options', 'title', 'scripts', 'styles', 'head'
+		);
 		$result = array_keys($file->handlers());
 		$this->assertEqual($expected, $result);
 
@@ -38,7 +40,7 @@ class FileTest extends \lithium\test\Unit {
 	}
 
 	public function testCoreHandlers() {
-		$message = new Message(array('base_url' => 'foo.local'));
+		$message = new Message(array('baseURL' => 'foo.local'));
 		$file = new File(compact('message'));
 
 		$this->setDefaultRoute();
@@ -49,10 +51,13 @@ class FileTest extends \lithium\test\Unit {
 		$this->resetRoutes();
 
 		$helper = new Html();
-		$class = get_class($helper);
-		$path = $file->applyHandler($helper, "{$class}::script", 'path', 'foo/file');
+		$class = get_class($helper) . "::script";
+		$path = $file->applyHandler($helper, $class, 'path', 'foo/file');
 		$this->assertEqual('http://foo.local/js/foo/file.js', $path);
-		$this->assertEqual('http://foo.local/some/generic/path', $file->path('some/generic/path'));
+		$this->assertEqual(
+			'http://foo.local/some/generic/path',
+			$file->path('some/generic/path')
+		);
 		$this->assertPattern(
 			'/^cid:[^@]+@foo.local$/',
 			$file->path('image.png', array('embed' => true, 'check' => false))

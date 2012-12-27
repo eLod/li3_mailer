@@ -14,8 +14,9 @@ use lithium\core\Libraries;
 class Mail extends \lithium\template\View {
 
 	/**
-	 * Holds a reference to the `Message` object that will be delivered. Allows headers
-	 * and other message attributes to be assigned in the templating layer.
+	 * Holds a reference to the `Message` object that will be delivered.
+	 * Allows headers and other message attributes to be assigned in the
+	 * templating layer.
 	 *
 	 * @see li3_mailer\net\mail\Message
 	 * @var object `Message` object instance.
@@ -39,7 +40,8 @@ class Mail extends \lithium\template\View {
 	protected function _init() {
 		Object::_init();
 
-		if (isset($this->_config['type']) && ($this->_config['type'] == 'text')) {
+		$type = isset($this->_config['type']) ? $this->_config['type'] : null;
+		if ($type === 'text') {
 			$h = function($data) { return $data; };
 		} else {
 			$encoding = 'UTF-8';
@@ -59,7 +61,9 @@ class Mail extends \lithium\template\View {
 			}
 			$class = $this->_config[$key];
 			$config = array('view' => $this) + $this->_config;
-			$this->{'_' . $key} = Libraries::instance('adapter.template.mail', $class, $config);
+			$path = 'adapter.template.mail';
+			$instance = Libraries::instance($path, $class, $config);
+			$this->{'_' . $key} = $instance;
 		}
 	}
 }

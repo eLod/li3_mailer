@@ -13,7 +13,7 @@ class Html extends \lithium\template\helper\Html {
 	 * Returns a charset meta-tag for declaring the encoding of the document.
 	 *
 	 * @see lithium\template\helper\Html::charset()
-	 * @param string $encoding The character encoding to be used in the meta tag.
+	 * @param string $encoding Character encoding to be used in the meta tag.
 	 *        Defaults to the encoding of the `Messagee` object attached to the
 	 *        current context. The default encoding of that object is `UTF-8`.
 	 *        The string given here is not manipulated in any way, so that
@@ -47,14 +47,16 @@ class Html extends \lithium\template\helper\Html {
 	 *    // will use an URL
 	 *    $this->image('http://my.url/image.png');
 	 *
-	 *    // will use an URL computed with http\Media (path is relative to `app/webroot/img`)
+	 *    // will use an URL computed with http\Media
+	 *    // (path is relative to `app/webroot/img`)
 	 *    $this->image('my/image.png', array('embed' => false));
 	 *
 	 *    // will use an URL computed with http\Media
 	 *    $this->image('/path/to/my/image.png', array('embed' => false));
 	 * }}}
 	 *
-	 * It is possible to pass extra options for path resolving and attaching, like:
+	 * It is possible to pass extra options for path resolving and attaching,
+	 * like:
 	 * {{{
 	 *    // embed the image from a particular library's mail asset path
 	 *    $this->image('my/image.png', array('library' => 'foo'));
@@ -77,7 +79,8 @@ class Html extends \lithium\template\helper\Html {
 	 * @filter This method can be filtered.
 	 */
 	public function image($path, array $options = array()) {
-		$embed = !(is_string($path) && preg_match('/^[a-z0-9-]+:\/\//i', $path));
+		$embedPattern = '/^[a-z0-9-]+:\/\//i';
+		$embed = !(is_string($path) && preg_match($embedPattern, $path));
 		$defaults = compact('embed');
 		$options += array('alt' => '');
 		list($scope, $options) = $this->_options($defaults, $options);
@@ -87,11 +90,12 @@ class Html extends \lithium\template\helper\Html {
 		$params = compact('path', 'options', 'scope');
 		$method = __METHOD__;
 
-		return $this->_filter($method, $params, function($self, $params, $chain) use ($method) {
+		$filter = function($self, $params, $chain) use ($method) {
 			extract($params);
 			$args = array($method, 'image', compact('path', 'options'), $scope);
 			return $self->invokeMethod('_render', $args);
-		});
+		};
+		return $this->_filter($method, $params, $filter);
 	}
 }
 

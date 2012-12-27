@@ -12,7 +12,8 @@ class Compiler extends \li3_mailer\template\mail\Compiler {
 		return $this->_message;
 	}
 
-	public function render($process, array $data = array(), array $options = array()) {
+	public function render($process, array $data = array(),
+				array $options = array()) {
 		return 'fake rendered message';
 	}
 }

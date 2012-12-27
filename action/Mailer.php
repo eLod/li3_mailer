@@ -6,9 +6,10 @@ use lithium\util\Inflector;
 use BadMethodCallException;
 
 /**
- * The `Mailer` class is the fundamental building block for sending mails within your application.
- * It may be subclassed to group options (with `$_messages`) and/or templates (view templates can
- * reside in a folder named after their `Mailer` subclass) together.
+ * The `Mailer` class is the fundamental building block for sending mails
+ * within your application. It may be subclassed to group options
+ * (with `$_messages`) and/or templates (view templates can reside in a folder
+ * named after their `Mailer` subclass) together.
  *
  * @see li3_mailer\net\mail\Media
  * @see li3_mailer\net\mail\Delivery
@@ -32,7 +33,9 @@ class Mailer extends \lithium\core\StaticObject {
 	 * @see li3_mailer\action\Mailer::_options()
 	 * @var array
 	 */
-	protected static $_short_options = array('from', 'cc', 'bcc', 'subject', 'delivery');
+	protected static $_shortOptions = array(
+		'from', 'cc', 'bcc', 'subject', 'delivery'
+	);
 
 	/**
 	 * Class dependencies.
@@ -49,18 +52,20 @@ class Mailer extends \lithium\core\StaticObject {
 	 * Create a message object with given options.
 	 *
 	 * @see li3_mailer\net\mail\Message
-	 * @param array $options Options, apart from `Message`'s options if `'class'`
-	 *        is presented it will be used for creating the instance, otherwise
-	 *        defaults to `'message'` (see `_instance()` and `$_classes`).
+	 * @param array $options Options, apart from `Message`'s options if
+	 *        `'class'` is presented it will be used for creating the instance,
+	 *        otherwise defaults to `'message'`
+	 *        (see `_instance()` and `$_classes`).
 	 * @return li3_mailer\net\mail\Message A message instance.
 	 */
 	public static function message(array $options = array()) {
-		return static::_filter(__FUNCTION__, compact('options'), function($self, $params) {
+		$filter = function($self, $params) {
 			$options = $params['options'];
 			$class = isset($options['class']) ? $options['class'] : 'message';
 			unset($options['class']);
 			return $self::invokeMethod('_instance', array($class, $options));
-		});
+		};
+		return static::_filter(__FUNCTION__, compact('options'), $filter);
 	}
 
 	/**
@@ -91,49 +96,63 @@ class Mailer extends \lithium\core\StaticObject {
 		$options = static::_options($messageName, $options);
 
 		$delivery = static::$_classes['delivery'];
-		$deliveryName = isset($options['delivery']) ? $options['delivery'] : 'default';
+		if (isset($options['delivery'])) {
+			$deliveryName = $options['delivery'];
+		} else {
+			$deliveryName = 'default';
+		}
 		unset($options['delivery']);
 
 		$messageOptions = $options + $delivery::config($deliveryName);
 		$message = static::message($messageOptions);
 		$transport = $delivery::adapter($deliveryName);
 
-		$transportOptions = isset($options['transport']) ? (array) $options['transport'] : array();
+		if (isset($options['transport'])) {
+			$transportOptions = (array) $options['transport'];
+		} else {
+			$transportOptions = array();
+		}
 		unset($options['transport']);
 
 		$data = isset($options['data']) ? $options['data'] : array();
 		unset($options['data']);
 		$class = get_called_class();
-		$name = preg_replace('/Mailer$/', '', substr($class, strrpos($class, "\\") + 1));
+		$class = substr($class, strrpos($class, "\\") + 1);
+		$name = preg_replace('/Mailer$/', '', $class);
 
 		$options += array(
-			'mailer' => ($name == '' ? null : Inflector::underscore($name)),
+			'mailer' => ($name === '' ? null : Inflector::underscore($name)),
 			'template' => $messageName
 		);
 		$media = static::$_classes['media'];
-		$params = compact('options', 'data', 'message', 'transport', 'transportOptions');
+		$params = compact('options', 'data', 'message');
+		$params += compact('transport', 'transportOptions');
 
-		return static::_filter(__FUNCTION__, $params, function($self, $params) use ($media) {
+		$filter = function($self, $params) use ($media) {
 			extract($params);
 			$media::render($message, $data, $options);
 			return $transport->deliver($message, $transportOptions);
-		});
+		};
+		return static::_filter(__FUNCTION__, $params, $filter);
 	}
 
 	/**
-	 * Allows the use of syntactic-sugar like `Mailer::deliverTestWithLocal()` instead of
-	 * `Mailer::deliver('test', array('delivery' => 'local'))`.
+	 * Allows the use of syntactic-sugar like `Mailer::deliverTestWithLocal()`
+	 * instead of `Mailer::deliver('test', array('delivery' => 'local'))`.
 	 *
 	 * @see li3_mailer\action\Mailer::deliver()
-	 * @link http://php.net/manual/en/language.oop5.overloading.php PHP Manual: Overloading
+	 * @link http://php.net/manual/en/language.oop5.overloading.php PHP
+	 *       Manual: Overloading
 	 *
-	 * @throws BadMethodCallException On unhandled call, will throw an exception.
+	 * @throws BadMethodCallException On unhandled call, will
+	 *         throw an exception.
 	 * @param string $method Method name caught by `__callStatic()`.
 	 * @param array $params Arguments given to the above `$method` call.
 	 * @return mixed Results of dispatched `Mailer::deliver()` call.
 	 */
 	public static function __callStatic($method, $params) {
-		$found = preg_match('/^deliver(?P<message>\w+)With(?P<delivery>\w+)$/', $method, $args);
+		$pattern = '/^deliver(?P<message>\w+)With(?P<delivery>\w+)$/';
+		$found = preg_match($pattern, $method, $args);
 
 		if (!$found) {
 			preg_match('/^deliver(?P<message>\w+)$/', $method, $args);
@@ -141,8 +160,9 @@ class Mailer extends \lithium\core\StaticObject {
 		if (!$args) {
 			$class = get_called_class();
 			$class = substr($class, strrpos($class, "\\") + 1);
-			$message = "Method `{$method}` not defined or handled in class `{$class}`.";
-			throw new BadMethodCallException($message);
+			$error = "Method `{$method}` not defined or handled " .
+					"in class `{$class}`.";
+			throw new BadMethodCallException($error);
 		}
 		$message = Inflector::underscore($args['message']);
 
@@ -158,17 +178,16 @@ class Mailer extends \lithium\core\StaticObject {
 	/**
 	 * Get options for a given message. Allows shorter options syntax
 	 * where the first item does not have an associative key (e.g. the
-	 * key is `0`)
-	 * like `('message', array('foo@bar', 'subject' => 'my subject', 'my' => 'data'))`
-	 * which will be translated to
+	 * key is `0`) like `('message', array('foo@bar', 'subject' => 'my subject',
+	 * 'my' => 'data'))` which will be translated to
 	 * `('message', array('to' => 'foo@bar', 'subject' => 'my subject',
 	 * 'data' => array('my' => 'data'))`.
-	 * Uses `$_short_options` to detect options that should be extracted
+	 * Uses `$_shortOptions` to detect options that should be extracted
 	 * (unless a value for key `'data'` is already set),
 	 * also merges in the settings from `$_messages`.
 	 *
 	 * @see li3_mailer\action\Mailer::$_messages
-	 * @see li3_mailer\action\Mailer::$_short_options
+	 * @see li3_mailer\action\Mailer::$_shortOptions
 	 * @param string $message The message identifier (name).
 	 * @param array $options Options.
 	 * @return array Options.
@@ -182,17 +201,19 @@ class Mailer extends \lithium\core\StaticObject {
 				$options += compact('to');
 			} else {
 				$data = $options;
-				$blank = array_fill_keys(static::$_short_options, null);
+				$blank = array_fill_keys(static::$_shortOptions, null);
 				$shorts = array_intersect_key($data, $blank);
 				$data = array_diff_key($data, $shorts);
 				$options = compact('to', 'data') + $shorts;
 			}
 		}
 		if (array_key_exists($message, static::$_messages)) {
-			$options = array_merge_recursive((array) static::$_messages[$message], $options);
+			$default = (array) static::$_messages[$message];
+			$options = array_merge_recursive($default, $options);
 		}
 		if (isset(static::$_messages[0])) {
-			$options = array_merge_recursive((array) static::$_messages[0], $options);
+			$default = (array) static::$_messages[0];
+			$options = array_merge_recursive($default, $options);
 		}
 		return $options;
 	}

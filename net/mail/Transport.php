@@ -26,7 +26,7 @@ abstract class Transport extends \lithium\core\Object {
 	 * @param mixed $address Address to format, may be a string or array.
 	 * @return string Formatted address list.
 	 */
-	protected function address($address) {
+	protected function _address($address) {
 		if (is_array($address)) {
 			return join(", ", array_map(function($name, $address) {
 				return is_int($name) ? $address : "{$name} <{$address}>";

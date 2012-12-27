@@ -5,9 +5,10 @@ namespace li3_mailer\template\mail;
 use lithium\core\Libraries;
 
 /**
- * The template compiler for mail messages differ from the original view template compiler
- * only it that stores compiled templates in a different directory (under `'/tmp/cache/mails'`
- * relative to application's resources directory).
+ * The template compiler for mail messages differ from the original view
+ * template compiler only it that stores compiled templates in a different
+ * directory (under `'/tmp/cache/mails'` relative to application's resources
+ * directory).
  *
  * @see lithium\template\view\Compiler
  * @see li3_mailer\template\mail\Compiler::template()

@@ -6,7 +6,7 @@ use li3_mailer\tests\mocks\net\mail\transport\adapter\SwiftTransport;
 
 class Swift extends \li3_mailer\net\mail\transport\adapter\Swift {
 
-	protected function transport(array $options = array()) {
+	protected function _transport(array $options = array()) {
 		return new SwiftTransport();
 	}
 }

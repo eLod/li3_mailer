@@ -30,7 +30,7 @@ use Swift_Attachment;
  *
  * @see http://swiftmailer.org/
  * @see li3_mailer\net\mail\transport\adapter\Swift::$_transport
- * @see li3_mailer\net\mail\transport\adapter\Debug::deliver()
+ * @see li3_mailer\net\mail\transport\adapter\Swift::deliver()
  * @see li3_mailer\net\mail\Delivery
  */
 class Swift extends \li3_mailer\net\mail\Transport {
@@ -53,42 +53,43 @@ class Swift extends \li3_mailer\net\mail\Transport {
 	 * Message property names for translating a `li3_mailer\net\mail\Message`
 	 * to `Swift_Message`.
 	 *
-	 * @see li3_mailer\net\mail\transport\adapter\Swift::message()
+	 * @see li3_mailer\net\mail\transport\adapter\Swift::_message()
 	 * @see li3_mailer\net\mail\Message
 	 * @see Swift_Message
 	 * @var array
 	 */
-	protected $_message_properties = array(
-		'subject', 'date', 'return_path', 'sender' => 'address', 'from' => 'address',
-		'reply_to' => 'address', 'to' => 'address', 'cc' => 'address', 'bcc' => 'address', 'charset'
+	protected $_messageProperties = array(
+		'subject', 'date', 'returnPath', 'sender' => 'address',
+		'from' => 'address', 'replyTo' => 'address', 'to' => 'address',
+		'cc' => 'address', 'bcc' => 'address', 'charset'
 	);
 
 	/**
-	 * Message attachment configuration names for translating a `li3_mailer\net\mail\Message`'s
-	 * attachments to `Swift_Attachment`s.
+	 * Message attachment configuration names for translating a
+	 * `li3_mailer\net\mail\Message`'s attachments to `Swift_Attachment`s.
 	 *
-	 * @see li3_mailer\net\mail\transport\adapter\Swift::message()
+	 * @see li3_mailer\net\mail\transport\adapter\Swift::_message()
 	 * @see li3_mailer\net\mail\Message
 	 * @see Swift_Attachment
 	 * @var array
 	 */
-	protected $_attachment_properties = array(
+	protected $_attachmentProperties = array(
 		'disposition', 'content-type', 'filename', 'id'
 	);
 
 	/**
 	 * Deliver a message with the SwiftMailer library. For available
-	 * options see `transport()`.
+	 * options see `_transport()`.
 	 *
-	 * @see li3_mailer\net\mail\transport\adapter\Swift::transport()
-	 * @see li3_mailer\net\mail\transport\adapter\Swift::message()
+	 * @see li3_mailer\net\mail\transport\adapter\Swift::_transport()
+	 * @see li3_mailer\net\mail\transport\adapter\Swift::_message()
 	 * @param object $message The message to deliver.
-	 * @param array $options Options (see `transport()`).
+	 * @param array $options Options (see `_transport()`).
 	 * @return mixed The return value of the `Swift_Mailer::send()` method.
 	 */
 	public function deliver($message, array $options = array()) {
-		$transport = $this->transport($options);
-		$message = $this->message($message);
+		$transport = $this->_transport($options);
+		$message = $this->_message($message);
 		return $transport->send($message);
 	}
 
@@ -103,11 +104,16 @@ class Swift extends \li3_mailer\net\mail\Transport {
 	 * @see Swift_SendmailTransport
 	 * @see Swift_MailTransport
 	 * @param array $options Options, see `$_transport`.
-	 * @return object A (`Swift_Mailer`) mailer transport for sending (should respond to `send`).
+	 * @return object A (`Swift_Mailer`) mailer transport for sending
+	 *         (should respond to `send`).
 	 */
-	protected function transport(array $options = array()) {
-		$transport_type = isset($this->_config['transport']) ? $this->_config['transport'] : null;
-		switch ($transport_type) {
+	protected function _transport(array $options = array()) {
+		if (isset($this->_config['transport'])) {
+			$type = $this->_config['transport'];
+		} else {
+			$type = null;
+		}
+		switch ($type) {
 			case 'mail':
 				$transport = Swift_MailTransport::newInstance();
 				break;
@@ -118,11 +124,11 @@ class Swift extends \li3_mailer\net\mail\Transport {
 				$transport = Swift_SmtpTransport::newInstance();
 				break;
 			default:
-				throw new RuntimeException(
-					"Unknown transport type `{$transport_type}` for `Swift` adapter."
-				);
+				$error = "Unknown transport type `{$type}` " .
+						"for `Swift` adapter.";
+				throw new RuntimeException($error);
 		}
-		$blank = array_fill_keys((array) $this->_transport[$transport_type], null);
+		$blank = array_fill_keys((array) $this->_transport[$type], null);
 		$options = array_intersect_key($options + $this->_config, $blank);
 		foreach ($options as $prop => $value) {
 			if (!is_null($value)) {
@@ -136,22 +142,22 @@ class Swift extends \li3_mailer\net\mail\Transport {
 	/**
 	 * Create a `Swift_Message` from `li3_mailer\net\mail\Message`.
 	 *
-	 * @see li3_mailer\net\mail\transport\adapter\Swift::$_message_properties
-	 * @see li3_mailer\net\mail\transport\adapter\Swift::$_attachment_properties
+	 * @see li3_mailer\net\mail\transport\adapter\Swift::$_messageProperties
+	 * @see li3_mailer\net\mail\transport\adapter\Swift::$_attachmentProperties
 	 * @see li3_mailer\net\mail\Message
 	 * @see Swift_Message
 	 * @param object $message The `Message` object to translate.
 	 * @return object The translated `Swift_Message` object.
 	 */
-	protected function message($message) {
-		$swift_message = Swift_Message::newInstance();
-		foreach ($this->_message_properties as $prop => $translated) {
+	protected function _message($message) {
+		$swiftMessage = Swift_Message::newInstance();
+		foreach ($this->_messageProperties as $prop => $translated) {
 			if (is_int($prop)) {
 				$prop = $translated;
 			}
 			if (!is_null($message->$prop)) {
 				$value = $message->$prop;
-				if ($translated == 'address') {
+				if ($translated === 'address') {
 					$translated = $prop;
 					if (is_array($value)) {
 						$newvalue = array();
@@ -166,40 +172,42 @@ class Swift extends \li3_mailer\net\mail\Transport {
 					}
 				}
 				$method = "set" . Inflector::camelize($translated);
-				$swift_message->$method($value);
+				$swiftMessage->$method($value);
 			}
 		}
 		$first = true;
-		foreach ($message->types() as $type => $content_type) {
+		foreach ($message->types() as $type => $contentType) {
 			if ($first) {
 				$first = false;
-				$swift_message->setBody($message->body($type), $content_type);
+				$swiftMessage->setBody($message->body($type), $contentType);
 			} else {
-				$swift_message->addPart($message->body($type), $content_type);
+				$swiftMessage->addPart($message->body($type), $contentType);
 			}
 		}
-		$headers = $swift_message->getHeaders();
+		$headers = $swiftMessage->getHeaders();
 		foreach ($message->headers as $header => $value) {
 			$headers->addTextHeader($header, $value);
 		}
 		foreach ($message->attachments() as $attachment) {
 			if (isset($attachment['path'])) {
-				$swift_attachment = Swift_Attachment::fromPath($attachment['path']);
+				$path = $attachment['path'];
+				$swiftAttachment = Swift_Attachment::fromPath($path);
 			} else {
-				$swift_attachment = Swift_Attachment::newInstance($attachment['data']);
+				$data = $attachment['data'];
+				$swiftAttachment = Swift_Attachment::newInstance($data);
 			}
-			foreach ($this->_attachment_properties as $prop => $translated) {
+			foreach ($this->_attachmentProperties as $prop => $translated) {
 				if (is_int($prop)) {
 					$prop = $translated;
 				}
 				if (isset($attachment[$prop])) {
 					$method = "set" . Inflector::camelize($translated);
-					$swift_attachment->$method($attachment[$prop]);
+					$swiftAttachment->$method($attachment[$prop]);
 				}
 			}
-			$swift_message->attach($swift_attachment);
+			$swiftMessage->attach($swiftAttachment);
 		}
-		return $swift_message;
+		return $swiftMessage;
 	}
 }
 

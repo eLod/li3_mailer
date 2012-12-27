@@ -80,7 +80,7 @@ couple places, where the information stored in the message can be customized, in
  - in mailer's `$_messages['message_name']`
  - explicit options (e.g. `$options` arguments for `Mailer::deliver()`)
 
-A message has one special attribute, the `$base_url` property. It is easier to conceive the purpose of this value with understanding
+A message has one special attribute, the `$baseURL` property. It is easier to conceive the purpose of this value with understanding
 where it is needed and how it is used:
 
  - When creating embedded attachments (see later) for example the message may need to generate a Content-ID. For generating this
@@ -89,7 +89,7 @@ where it is needed and how it is used:
 
 Furthermore as sending emails from cron scripts is a common use-case the plugin can not depend on having a web environment, where
 such a value can be determined. For this purpose the message has this property, which can be configured as seen already (e.g. in the
-delivery, the mailer or explicit). To generate correct URLs the `$base_url` should have the format `scheme://host/base` (e.g.
+delivery, the mailer or explicit). To generate correct URLs the `$baseURL` should have the format `scheme://host/base` (e.g.
 `http://example.com/my/app`). In addition when the message is initialized it will try to autodetect this setting (so it is possible to
 not specify this option when sending email messages only from web environment).
 

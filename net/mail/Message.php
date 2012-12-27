@@ -30,7 +30,7 @@ class Message extends \lithium\core\Object {
 	 *
 	 * @var string
 	 */
-	public $return_path;
+	public $returnPath;
 
 	/**
 	 * Sender (this should be set to a single address
@@ -53,7 +53,7 @@ class Message extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	public $reply_to;
+	public $replyTo;
 
 	/**
 	 * Recipient(s).
@@ -109,12 +109,12 @@ class Message extends \lithium\core\Object {
 	 * URLs (and the host part is used to construct Content-IDs).
 	 *
 	 * @see li3_mailer\net\mail\Message::_init()
-	 * @see li3_mailer\net\mail\Message::discoverURL()
+	 * @see li3_mailer\net\mail\Message::_discoverURL()
 	 * @see li3_mailer\net\mail\Media::_request()
-	 * @see li3_mailer\net\mail\Message::randomId()
+	 * @see li3_mailer\net\mail\Message::_randomId()
 	 * @var string
 	 */
-	public $base_url = null;
+	public $baseURL = null;
 
 	/**
 	 * Attachments for the message.
@@ -131,9 +131,10 @@ class Message extends \lithium\core\Object {
 	 * Content types indexed by extension.
 	 *
 	 * @see li3_mailer\net\mail\Message::attach()
+	 * @see li3_mailer\net\mail\Message::__construct()
 	 * @var array
 	 */
-	protected $_mime_types = array(
+	protected $_mimeTypes = array(
 		'aif'  => 'audio/x-aiff',
 		'aiff' => 'audio/x-aiff',
 		'avi'  => 'video/avi',
@@ -142,7 +143,6 @@ class Message extends \lithium\core\Object {
 		'csv'  => 'text/csv',
 		'dmg'  => 'application/x-apple-diskimage',
 		'doc'  => 'application/msword',
-		'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 		'eml'  => 'message/rfc822',
 		'aps'  => 'application/postscript',
 		'exe'  => 'application/x-ms-dos-executable',
@@ -173,7 +173,6 @@ class Message extends \lithium\core\Object {
 		'pdf'  => 'application/pdf',
 		'png'  => 'image/png',
 		'ppt'  => 'application/vnd.ms-powerpoint',
-		'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 		'ps'   => 'application/postscript',
 		'rar'  => 'application/x-rar-compressed',
 		'rtf'  => 'application/rtf',
@@ -189,7 +188,6 @@ class Message extends \lithium\core\Object {
 		'wma'  => 'audio/x-ms-wma',
 		'wmv'  => 'audio/x-ms-wmv',
 		'xls'  => 'application/excel',
-		'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 		'xml'  => 'application/xml',
 		'zip'  => 'application/zip'
 	);
@@ -209,7 +207,8 @@ class Message extends \lithium\core\Object {
 	 * @var array
 	 */
 	protected $_classes = array(
-		'media' => 'li3_mailer\net\mail\Media', 'grammar' => 'li3_mailer\net\mail\Grammar'
+		'media' => 'li3_mailer\net\mail\Media',
+		'grammar' => 'li3_mailer\net\mail\Grammar'
 	);
 
 	/**
@@ -217,14 +216,16 @@ class Message extends \lithium\core\Object {
 	 *
 	 * @var array
 	 */
-	protected $_autoConfig = array('classes' => 'merge', 'mime_types' => 'merge');
+	protected $_autoConfig = array(
+		'classes' => 'merge', 'mimeTypes' => 'merge'
+	);
 
 	/**
 	 * Adds config values to the public properties when a new object is created.
 	 *
 	 * @see li3_mailer\net\mail\Message::attach()
 	 * @see li3_mailer\net\mail\Message::_init()
-	 * @see li3_mailer\net\mail\Message::$_mime_types
+	 * @see li3_mailer\net\mail\Message::$_mimeTypes
 	 * @see li3_mailer\net\mail\Message::$_classes
 	 * @param array $config Supported options:
 	 *        - the public properties, such as `'date'`, `'to'`, etc.,
@@ -232,16 +233,24 @@ class Message extends \lithium\core\Object {
 	 *          the values may be string paths or configurations indexed
 	 *          by path (or integer index if path is not appropiate), see
 	 *          `attach()` and `_init()`,
-	 *        - `'mime_types'` _array_: list of (additional) mime types for
-	 *          autodetecting attachment types, see `$_mime_types` and `attach()`,
+	 *        - `'mimeTypes'` _array_: list of (additional) mime types for
+	 *          autodetecting attachment types,
+	 *          see `$_mimeTypes` and `attach()`,
 	 *        - `'classes'` _array_: class dependencies, see `$_classes`.
 	 */
 	public function __construct(array $config = array()) {
 		foreach (array_filter($config) as $key => $value) {
 			$this->{$key} = $value;
 		}
-		$defaults = array('mime_types' => array());
-		parent::__construct($config +  $defaults);
+		$defaults = array('mimeTypes' => array());
+		parent::__construct($config + $defaults);
+
+		$type = 'application/vnd.openxmlformats-officedocument';
+		$this->_mimeTypes += array(
+			'docx' => "{$type}.wordprocessingml.document",
+			'pptx' => "{$type}.presentationml.presentation",
+			'xlsx' => "{$type}.spreadsheetml.sheet"
+		);
 	}
 
 	/**
@@ -252,17 +261,19 @@ class Message extends \lithium\core\Object {
 	 *
 	 * - integer key with string path value (meaning empty configuration)
 	 * - integer key with configuration array (meanining `null` path)
-	 * - path as key with null (meaning empty configuration) or configuration array as value
+	 * - path as key with null (meaning empty configuration) or configuration
+	 *   array as value
 	 *
 	 * For available configuration options see `attach()`.
 	 *
-	 * Furthermore it initializes the grammar (used to validate generated Content-IDs,
-	 * see `randomId()`) and the `$base_url` (see `discoverURL()`).
+	 * Furthermore it initializes the grammar (used to validate generated
+	 * Content-IDs, see `_randomId()`) and the `$baseURL`
+	 * (see `_discoverURL()`).
 	 *
 	 * @see li3_mailer\net\mail\Message::__construct()
 	 * @see li3_mailer\net\mail\Message::attach()
-	 * @see li3_mailer\net\mail\Message::randomId()
-	 * @see li3_mailer\net\mail\Message::discoverURL()
+	 * @see li3_mailer\net\mail\Message::_randomId()
+	 * @see li3_mailer\net\mail\Message::_discoverURL()
 	 * @return void
 	 */
 	protected function _init() {
@@ -278,14 +289,18 @@ class Message extends \lithium\core\Object {
 				$this->attach($path, (array) $cfg);
 			}
 		}
-		$grammar = (array) (isset($this->_config['grammar']) ? $this->_config['grammar'] : null);
-		$this->_grammar = $this->_instance('grammar', compact('grammar'));
-		$this->base_url = $this->base_url ?: $this->discoverURL();
-		if ($this->base_url && strpos($this->base_url, '://') === false) {
-			$this->base_url = 'http://' . $this->base_url;
+		if (isset($this->_config['grammar'])) {
+			$grammar = (array) $this->_config['grammar'];
+		} else {
+			$grammar = array();
 		}
-		if ($this->base_url) {
-			$this->base_url = rtrim($this->base_url, '/');
+		$this->_grammar = $this->_instance('grammar', compact('grammar'));
+		$this->baseURL = $this->baseURL ?: $this->_discoverURL();
+		if ($this->baseURL && strpos($this->baseURL, '://') === false) {
+			$this->baseURL = 'http://' . $this->baseURL;
+		}
+		if ($this->baseURL) {
+			$this->baseURL = rtrim($this->baseURL, '/');
 		}
 	}
 
@@ -319,9 +334,13 @@ class Message extends \lithium\core\Object {
 		if (!isset($this->body[$type])) {
 			$this->body[$type] = array();
 		}
-		$this->body[$type] = array_merge((array) $this->body[$type], (array) $data);
+		$body = $this->body[$type];
+		$this->body[$type] = array_merge((array) $body, (array) $data);
 		$body = join("\n", $this->body[$type]);
-		return ($options['buffer']) ? str_split($body, $options['buffer']) : $body;
+		if ($options['buffer']) {
+			return str_split($body, $options['buffer']);
+		}
+		return $body;
 	}
 
 	/**
@@ -366,8 +385,11 @@ class Message extends \lithium\core\Object {
 		if (!$this->date) {
 			$this->date = time();
 		}
-		if (!is_int($this->date) || $this->date < 0 || $this->date > 2147483647) {
-			throw new RuntimeException("Invalid date timestamp `{$this->date}` set for `Message`.");
+		$numeric = is_int($this->date);
+		if (!$numeric || $this->date < 0 || $this->date > 2147483647) {
+			$error = "Invalid date timestamp `{$this->date}` " .
+					"set for `Message`.";
+			throw new RuntimeException($error);
 		}
 	 }
 
@@ -382,12 +404,13 @@ class Message extends \lithium\core\Object {
 	 */
 	 public function ensureValidFrom() {
 		if (!$this->from) {
-			throw new RuntimeException('`Message` should have at least one `$from` address.');
+			$error = '`Message` should have at least one `$from` address.';
+			throw new RuntimeException($error);
 		} else if (!is_string($this->from) && !is_array($this->from)) {
 			$type = gettype($this->from);
-			throw new RuntimeException(
-				"`Message`'s `\$from` field should be a string or an array, `{$type}` given."
-			);
+			$from = '`Message`\'s `$from` field';
+			$error = "{$from} should be a string or an array, `{$type}` given.";
+			throw new RuntimeException($error);
 		}
 	 }
 
@@ -411,24 +434,27 @@ class Message extends \lithium\core\Object {
 		$sender = (array) $this->sender;
 		if (!$sender && count($from) > 1) {
 			$this->sender = array(key($from) => current($from));
-		} else if ($sender && count($from) == 1 && $sender == $from) {
+		} else if ($sender && count($from) === 1 && $sender === $from) {
 			$this->sender = null;
 		}
 		if ($this->sender && count((array) $this->sender) > 1) {
-			throw new RuntimeException('`Message` should only have a single `$sender` address.');
+			$error = '`Message` should only have a single `$sender` address.';
+			throw new RuntimeException($error);
 		}
 	}
 
 	/**
 	 * Attach content to the message.
 	 *
-	 * If `$path` is a string it is resolved with `Media::asset()` and its content will be
-	 * attached (with setting the defaults for `'filename'` to file's basename and `'content-type'`
-	 * from `$_mime_types` if file's extension is registered).
+	 * If `$path` is a string it is resolved with `Media::asset()` and its
+	 * content will be attached (with setting the defaults for `'filename'`
+	 * to file's basename and `'content-type'` from `$_mimeTypes` if file's
+	 * extension is registered).
 	 *
-	 * If `$path` is `null` (or not a string) then `$options['data']` is used. It must be a string
-	 * and will be used as the content body. If `'filename'` is given and its extension is
-	 * registered in `$_mime_types` then it is used as the default value for `'content-type'`.
+	 * If `$path` is `null` (or not a string) then `$options['data']` is used.
+	 * It must be a string and will be used as the content body. If `'filename'`
+	 * is given and its extension is registered in `$_mimeTypes` then it is
+	 * used as the default value for `'content-type'`.
 	 *
 	 * Examples:
 	 * {{{
@@ -462,62 +488,69 @@ class Message extends \lithium\core\Object {
 	 * }}}
 	 *
 	 * @see li3_mailer\net\mail\Media::asset()
-	 * @see li3_mailer\net\mail\Message::$_mime_types
+	 * @see li3_mailer\net\mail\Message::$_mimeTypes
 	 * @see li3_mailer\net\mail\Message::embed()
 	 * @param string $path Path to file, may be null.
 	 * @param array $options Available options are:
-	 *        - `'data'` _string_: content body (if `$path` is a string this is ignored),
-	 *        - `'disposition'` _string_: disposition, usually `'attachment'` or `'inline'`,
-	 *          defaults to `'attachment'`,
-	 *        - `'content-type'` _string_: content-type, defaults to `'application/octet-stream'`,
+	 *        - `'data'` _string_: content body (if `$path` is a string
+	 *          this is ignored),
+	 *        - `'disposition'` _string_: disposition, usually `'attachment'` or
+	 *          `'inline'`, defaults to `'attachment'`,
+	 *        - `'content-type'` _string_: content-type, defaults to
+	 *          `'application/octet-stream'`,
 	 *        - `'filename'` _string_: filename,
-	 *        - `'id'` _string_: content-id, useful for embedding, see `embed()`,
-	 *        - `'library'` _boolean_ or _string_: name of the library to resolve path with (when
-	 *          `$path` is string and is relative), defaults to `true` (meaning the default
-	 *          library), see `Media::asset()`,
-	 *        - `'check'` _boolean_: check if file exists (if `$path` is string), defaults to
-	 *          `true`, see `Media::asset()`.
-	 * @throws RuntimeException Throws an exception if neither `$path` nor `$options['data']` is
-	 *         valid,  when `$path` is set but does not exists or when `$options['data']` is
-	 *         not string (and `$path` is not string).
+	 *        - `'id'` _string_: content-id, useful for embedding,
+	 *          see `embed()`,
+	 *        - `'library'` _boolean_ or _string_: name of the library to
+	 *          resolve path with (when `$path` is string and is relative),
+	 *          defaults to `true` (meaning the default library),
+	 *          see `Media::asset()`,
+	 *        - `'check'` _boolean_: check if file exists (if `$path` is
+	 *          string), defaults to `true`, see `Media::asset()`.
+	 * @throws RuntimeException Throws an exception if neither `$path` nor
+	 *         `$options['data']` is valid,  when `$path` is set but does not
+	 *         exists or when `$options['data']` is not string (and `$path` is
+	 *         not string).
 	 * @return object Message object this method was called on.
 	 */
 	public function attach($path, array $options = array()) {
 		if (!is_string($path) && !isset($options['data'])) {
-			throw new RuntimeException('Neither path nor data provided, cannot attach.');
+			$error = 'Neither path nor data provided, cannot attach.';
+			throw new RuntimeException($error);
 		}
 		$defaults = array(
-			'disposition' => 'attachment', 'content-type' => 'application/octet-stream'
+			'disposition' => 'attachment',
+			'content-type' => 'application/octet-stream'
 		);
 		if (is_string($path)) {
 			$media = $this->_classes['media'];
-			$asset_defaults = array('check' => true, 'library' => true);
-			$asset_path = $media::asset($path, $options + $asset_defaults);
-			if ($asset_path === false) {
-				throw new RuntimeException(
-					"File at `{$path}` is not a valid asset, cannot attach."
-				);
+			$assetDefaults = array('check' => true, 'library' => true);
+			$assetPath = $media::asset($path, $options + $assetDefaults);
+			if ($assetPath === false) {
+				$error = "File at `{$path}` is not a valid asset, " .
+						"cannot attach.";
+				throw new RuntimeException($error);
 			}
-			$attach_path = $path;
-			$path = $asset_path;
+			$attachPath = $path;
+			$path = $assetPath;
 			unset($options['data']);
 			$defaults += array('filename' => basename($path));
 			$extension = pathinfo($path, PATHINFO_EXTENSION);
-			if (isset($this->_mime_types[$extension])) {
-				$defaults['content-type'] = $this->_mime_types[$extension];
+			if (isset($this->_mimeTypes[$extension])) {
+				$defaults['content-type'] = $this->_mimeTypes[$extension];
 			}
-			$options = compact('path', 'attach_path') + $options + $defaults;
+			$options = compact('path', 'attachPath') + $options + $defaults;
 		} else {
 			if (!is_string($options['data'])) {
 				$type = gettype($options['data']);
-				throw new RuntimeException(
-					"Data should be a string, `{$type}` given, cannot attach."
-				);
+				$error = "Data should be a string, `{$type}` given, " .
+						"cannot attach.";
+				throw new RuntimeException($error);
 			}
 			if (isset($options['filename'])) {
 				$extension = pathinfo($options['filename'], PATHINFO_EXTENSION);
-				if (isset($this->_mime_types[$extension])) {
-					$defaults['content-type'] = $this->_mime_types[$extension];
+				if (isset($this->_mimeTypes[$extension])) {
+					$defaults['content-type'] = $this->_mimeTypes[$extension];
 				}
 			}
 			$options += $defaults;
@@ -527,8 +560,8 @@ class Message extends \lithium\core\Object {
 	}
 
 	/**
-	 * Detach content. `$path` should be the same identifier used to `attach()` content,
-	 * e.g. `$path` or `$options['data']`.
+	 * Detach content. `$path` should be the same identifier used to `attach()`
+	 * content, e.g. `$path` or `$options['data']`.
 	 *
 	 * @see li3_mailer\net\mail\Message::attach()
 	 * @param string $path Path (or data) used to attach content.
@@ -537,7 +570,7 @@ class Message extends \lithium\core\Object {
 	public function detach($path) {
 		$filter = function($cfg) use ($path) {
 			switch (true) {
-				case isset($cfg['attach_path']) && $cfg['attach_path'] === $path:
+				case isset($cfg['attachPath']) && $cfg['attachPath'] === $path:
 				case isset($cfg['data']) && $cfg['data'] === $path:
 					return false;
 			}
@@ -559,30 +592,33 @@ class Message extends \lithium\core\Object {
 
 
 	/**
-	 * Embed content. Sets default options, calls `attach()` with it and returns the Content-ID
-	 * suitable for embedding.
+	 * Embed content. Sets default options, calls `attach()` with it and
+	 * returns the Content-ID suitable for embedding.
 	 *
 	 * Example:
 	 * {{{
 	 *    //embed a picture
 	 *    $cid = $message->embed('picture.png');
 	 *    //use the Content-ID as the src in the body
-	 *    $message->body('html', 'my image: <img src="cid:' . $cid . '" alt="my image"/>');
+	 *    $img = '<img src="cid:' . $cid . '" alt="my image"/>';
+	 *    $message->body('html', 'my image: ' . $img);
 	 * }}}
 	 *
 	 * The default options set by this method are:
 	 *
-	 * - `'id'`: generates a random id with `randomId()`,
+	 * - `'id'`: generates a random id with `_randomId()`,
 	 * - `'disposition'`: defaults to `'inline'`.
 	 *
-	 * @see li3_mailer\net\mail\Message::randomId()
+	 * @see li3_mailer\net\mail\Message::_randomId()
 	 * @see li3_mailer\net\mail\Message::attach()
 	 * @param string $path See `attach()`.
 	 * @param array $options See `attach()`.
 	 * @return string Content-ID.
 	 */
 	public function embed($path, array $options = array()) {
-		$options += array('id' => $this->randomId(), 'disposition' => 'inline');
+		$options += array(
+			'id' => $this->_randomId(), 'disposition' => 'inline'
+		);
 		$this->attach($path, $options);
 		return $options['id'];
 	}
@@ -597,10 +633,10 @@ class Message extends \lithium\core\Object {
 	 * @see li3_mailer\net\mail\Grammar::isValidId()
 	 * @return string Content-ID.
 	 */
-	protected function randomId() {
+	protected function _randomId() {
 		$left = time() . '.' . uniqid();
-		if (!empty($this->base_url)) {
-			list($scheme, $url) = explode('://', $this->base_url);
+		if (!empty($this->baseURL)) {
+			list($scheme, $url) = explode('://', $this->baseURL);
 			$parts = explode('/', $url, 2);
 			$right = array_shift($parts);
 		} else {
@@ -620,7 +656,7 @@ class Message extends \lithium\core\Object {
 	 * @see lithium\action\Request
 	 * @return string Base url if found, `null` otherwise.
 	 */
-	protected static function discoverURL() {
+	protected static function _discoverURL() {
 		$request = new Request();
 		if ($host = $request->env('HTTP_HOST')) {
 			$scheme = $request->env('HTTPS') ? 'https://' : 'http://';

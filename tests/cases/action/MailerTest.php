@@ -6,6 +6,7 @@ use li3_mailer\tests\mocks\action\Mailer;
 use li3_mailer\tests\mocks\action\MailerOverload;
 use li3_mailer\tests\mocks\action\TestMailer;
 use li3_mailer\tests\mocks\action\MailerWithOptions;
+use li3_mailer\tests\mocks\action\MailerWithoutDelivery;
 use li3_mailer\net\mail\Message;
 
 $filter = function($self, $params, $chain) {
@@ -14,6 +15,7 @@ $filter = function($self, $params, $chain) {
 };
 Mailer::applyFilter('deliver', $filter);
 TestMailer::applyFilter('deliver', $filter);
+MailerWithoutDelivery::applyFilter('deliver', $filter);
 
 class MailerTest extends \lithium\test\Unit {
 
@@ -45,14 +47,21 @@ class MailerTest extends \lithium\test\Unit {
 		$this->assertEqual(array('extra' => 'data'), $transportOptions);
 	}
 
+	public function testDeliverDefaultDelivery() {
+		$params = MailerWithoutDelivery::deliver('message_name', array(
+			'to' => 'foo@bar', 'view' => 'li3_mailer\tests\mocks\template\Mail'
+		));
+		$this->assertEqual('default@config', $params['message']->from);
+	}
+
 	public function testSetsMailer() {
-		$params = Mailer::deliver('message_name', array('template' => false, 'data' => 'string'));
+		$options = array('template' => false, 'data' => 'string');
+		$params = Mailer::deliver('message_name', $options);
 		extract($params);
 		$this->assertEqual(null, $options['mailer']);
-		$params = TestMailer::deliver(
-			'message_name',
-			array('template' => false, 'data' => 'string')
-		);
+
+		$options = array('template' => false, 'data' => 'string');
+		$params = TestMailer::deliver('message_name', $options);
 		extract($params);
 		$this->assertEqual('test', $options['mailer']);
 	}
@@ -61,21 +70,31 @@ class MailerTest extends \lithium\test\Unit {
 		list($message, $options) = MailerOverload::deliverTest();
 		$this->assertEqual('test', $message);
 		$this->assertEqual(array(), $options);
+
 		list($message, $options) = MailerOverload::deliverTestWithLocal();
 		$this->assertEqual('test', $message);
 		$this->assertEqual(array('delivery' => 'local'), $options);
-		list($message, $options) = MailerOverload::deliverTestWithLocal(array('foo' => 'bar'));
-		$this->assertEqual(array('foo' => 'bar', 'delivery' => 'local'), $options);
-		list($message, $options) = MailerOverload::deliverTestWithLocal('foo@bar');
-		$this->assertEqual(array('foo@bar', 'delivery' => 'local'), $options);
-		list($message, $options) = MailerOverload::deliverTestWithLocal(array(
-			'foo@bar', 'foo' => 'bar'
-		));
-		$this->assertEqual(array('foo@bar', 'foo' => 'bar', 'delivery' => 'local'), $options);
+
+		$data = array('foo' => 'bar');
+		list($message, $options) = MailerOverload::deliverTestWithLocal($data);
+		$expected = array('foo' => 'bar', 'delivery' => 'local');
+		$this->assertEqual($expected, $options);
+
+		$data = 'foo@bar';
+		list($message, $options) = MailerOverload::deliverTestWithLocal($data);
+		$expected = array('foo@bar', 'delivery' => 'local');
+		$this->assertEqual($expected, $options);
+
+		$data = array('foo@bar', 'foo' => 'bar');
+		list($message, $options) = MailerOverload::deliverTestWithLocal($data);
+		$expected = array('foo@bar', 'foo' => 'bar', 'delivery' => 'local');
+		$this->assertEqual($expected, $options);
 	}
 
 	public function testOverloadException() {
-		$this->expectException('Method `foobar` not defined or handled in class `Mailer`.');
+		$this->expectException(
+			'Method `foobar` not defined or handled in class `Mailer`.'
+		);
 		Mailer::foobar();
 	}
 
@@ -89,9 +108,10 @@ class MailerTest extends \lithium\test\Unit {
 		$result = MailerWithOptions::options('without_extra_options', $options);
 		$this->assertEqual($expected, $result);
 		$expected = array(
-			'to' => 'foo@bar',
-			'subject' => 'my subject',
-			'data' => array('my' => 'data', 'additional' => 'data', 'extra' => 'data')
+			'to' => 'foo@bar', 'subject' => 'my subject',
+			'data' => array(
+				'my' => 'data', 'additional' => 'data', 'extra' => 'data'
+			)
 		);
 		$result = MailerWithOptions::options('with_extra_options', $options);
 		$this->assertEqual($expected, $result);

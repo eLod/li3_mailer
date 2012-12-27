@@ -18,7 +18,7 @@ class HtmlTest extends \lithium\test\Unit {
 	}
 
 	public function testImage() {
-		$message = new Message(array('base_url' => 'foo.local'));
+		$message = new Message(array('baseURL' => 'foo.local'));
 		$context = new File(compact('message'));
 		$html = new Html(compact('context'));
 

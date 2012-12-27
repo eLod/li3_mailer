@@ -30,8 +30,8 @@ namespace li3_mailer\net\mail;
  */
 class Delivery extends \lithium\core\Adaptable {
 	/**
-	 * A dot-separated path for use by `Libraries::locate()`. Used to look up the correct type of
-	 * adapters for this class.
+	 * A dot-separated path for use by `Libraries::locate()`.
+	 * Used to look up the correct type of adapters for this class.
 	 *
 	 * @var string
 	 */
