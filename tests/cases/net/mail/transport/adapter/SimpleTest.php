@@ -2,12 +2,12 @@
 
 namespace li3_mailer\tests\cases\net\mail\transport\adapter;
 
-use li3_mailer\tests\mocks\net\mail\transport\adapter\Simple;
+use li3_mailer\net\mail\transport\adapter\Simple;
 use li3_mailer\net\mail\Message;
 
 class SimpleTest extends \lithium\test\Unit {
 	public function testPlainMessage() {
-		$simple = new Simple();
+		$simple = $this->_adapter();
 		$message = new Message(array(
 			'to' => 'foo@bar', 'from' => 'valid@address',
 			'subject' => 'test subject', 'types' => 'text',
@@ -36,7 +36,7 @@ class SimpleTest extends \lithium\test\Unit {
 	}
 
 	public function testHtmlMessage() {
-		$simple = new Simple();
+		$simple = $this->_adapter();
 		$message = new Message(array(
 			'to' => 'foo@bar', 'from' => 'valid@address',
 			'subject' => 'test subject', 'types' => 'html'
@@ -61,7 +61,7 @@ class SimpleTest extends \lithium\test\Unit {
 	}
 
 	public function testMultipartMessage() {
-		$simple = new Simple();
+		$simple = $this->_adapter();
 		$message = new Message(array(
 			'to' => 'foo@bar', 'from' => 'valid@address',
 			'subject' => 'test subject'
@@ -100,7 +100,7 @@ class SimpleTest extends \lithium\test\Unit {
 	}
 
 	public function testAttachments() {
-		$simple = new Simple();
+		$simple = $this->_adapter();
 		$path = tempnam('/tmp', 'li3_mailer_test');
 		file_put_contents($path, 'file data');
 		$message = new Message(array('attach' => array(
@@ -134,7 +134,7 @@ class SimpleTest extends \lithium\test\Unit {
 	}
 
 	public function testAttachmentErrorNoFile() {
-		$simple = new Simple();
+		$simple = $this->_adapter();
 		$message = new Message(array('attach' => array(
 			'/foo/bar' => array('filename' => 'file.txt', 'check' => false)
 		)));
@@ -143,7 +143,7 @@ class SimpleTest extends \lithium\test\Unit {
 	}
 
 	public function testAttachmentWithoutFilename() {
-		$simple = new Simple();
+		$simple = $this->_adapter();
 		$message = new Message(array('attach' => array(
 			array('data' => 'my data', 'content-type' => 'text/plain')
 		)));
@@ -170,6 +170,15 @@ class SimpleTest extends \lithium\test\Unit {
 						$message = '{:message}') {
 		$pregResult = !!preg_match($expected, $result);
 		$this->assert($pregResult, $message, compact('expected', 'result'));
+	}
+
+	protected function _adapter() {
+		$dependencies = array(
+			'mail' => function($to, $subject, $body, $headers) {
+				return compact('to', 'subject', 'body', 'headers');
+			}
+		);
+		return new Simple(compact('dependencies'));
 	}
 }
 

@@ -34,9 +34,26 @@ class Simple extends \li3_mailer\net\mail\Transport {
 	);
 
 	/**
+	 * Dependencies. Currently only the mail function to call,
+	 * which defaults to PHP's built-in `mail()` function.
+	 *
+	 * @see li3_mailer\net\mail\transport\adapter\Simple::deliver()
+	 * @var mixed
+	 */
+	protected $_dependencies = array('mail' => 'mail');
+
+	/**
+	 * Auto configuration properties.
+	 *
+	 * @var array
+	 */
+	protected $_autoConfig = array('dependencies' => 'merge');
+
+	/**
 	 * Deliver a message with `PHP`'s built-in `mail` function.
 	 *
 	 * @see http://php.net/manual/en/function.mail.php
+	 * @see li3_mailer\net\mail\transport\adapter\Simple::$_dependencies
 	 * @param object $message The message to deliver.
 	 * @param array $options No options supported.
 	 * @return mixed The return value of the `mail` function.
@@ -120,7 +137,9 @@ class Simple extends \li3_mailer\net\mail\Transport {
 			return "{$name}: {$value}";
 		}, array_keys($headers), $headers));
 		$to = $this->_address($message->to);
-		return mail($to, $message->subject, $body, $headers);
+
+		$mail = $this->_dependencies['mail'];
+		return call_user_func($mail, $to, $message->subject, $body, $headers);
 	}
 }
 
