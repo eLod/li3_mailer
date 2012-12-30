@@ -36,20 +36,20 @@ class Grammar extends \lithium\core\Object {
 		$grammar['text'] = '[\x00-\x08\x0B\x0C\x0E-\x7F]';
 		$grammar['quoted-pair'] = "(?:\\\\{$grammar['text']})";
 		$grammar['qtext'] = "(?:{$grammar['NO-WS-CTL']}|" .
-					'[\x21\x23-\x5B\x5D-\x7E])';
+			'[\x21\x23-\x5B\x5D-\x7E])';
 		$grammar['atext'] = '[a-zA-Z0-9!#\$%&\'\*\+\-\/=\?\^_`\{\}\|~]';
 		$grammar['dot-atom-text'] = "(?:{$grammar['atext']}+" .
-						"(\.{$grammar['atext']}+)*)";
+			"(\.{$grammar['atext']}+)*)";
 		$grammar['no-fold-quote'] = "(?:\"(?:{$grammar['qtext']}|" .
-						"{$grammar['quoted-pair']})*\")";
+			"{$grammar['quoted-pair']})*\")";
 		$grammar['dtext'] = "(?:{$grammar['NO-WS-CTL']}|" .
-					'[\x21-\x5A\x5E-\x7E])';
+			'[\x21-\x5A\x5E-\x7E])';
 		$grammar['no-fold-literal'] = "(?:\[(?:{$grammar['dtext']}|" .
-						"{$grammar['quoted-pair']})*\])";
+			"{$grammar['quoted-pair']})*\])";
 		$grammar['id-left'] = "(?:{$grammar['dot-atom-text']}|" .
-					"{$grammar['no-fold-quote']})";
+			"{$grammar['no-fold-quote']})";
 		$grammar['id-right'] = "(?:{$grammar['dot-atom-text']}|" .
-					"{$grammar['no-fold-literal']})";
+			"{$grammar['no-fold-literal']})";
 		$provided = isset($config['grammar']) ? $config['grammar'] : null;
 		$grammar = array_merge_recursive($grammar, (array) $provided);
 		parent::__construct(compact('grammar') + $config);

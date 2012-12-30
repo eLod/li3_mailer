@@ -90,10 +90,10 @@ class DebugTest extends \lithium\test\Unit {
 		$debug = new Debug();
 		$result = $debug->invokeMethod('_format', array($message, 'normal'));
 		$expected = "Mail sent to to from from " .
-				"(sender: sender, cc: cc, bcc: bcc)\n" .
-				"with date {$date} and subject `subject` in formats html, " .
-				"text, text message body:\n" .
-				"text body\n";
+			"(sender: sender, cc: cc, bcc: bcc)\n" .
+			"with date {$date} and subject `subject` in formats html, " .
+			"text, text message body:\n" .
+			"text body\n";
 		$this->assertEqual($expected, $result);
 	}
 
@@ -109,10 +109,10 @@ class DebugTest extends \lithium\test\Unit {
 		$debug = new Debug();
 		$result = $debug->invokeMethod('_format', array($message, 'full'));
 		$expected = "Mail sent to to from from " .
-				"(sender: sender, cc: cc, bcc: bcc)\n" .
-				"with date {$date} and subject `subject` in formats html, " .
-				"text, text message body:\n" .
-				"text body\nhtml message body:\nhtml body\n";
+			"(sender: sender, cc: cc, bcc: bcc)\n" .
+			"with date {$date} and subject `subject` in formats html, " .
+			"text, text message body:\n" .
+			"text body\nhtml message body:\nhtml body\n";
 		$this->assertEqual($expected, $result);
 	}
 

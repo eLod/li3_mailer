@@ -106,14 +106,14 @@ class File extends \lithium\template\view\adapter\File {
 
 		$this->_handlers += array(
 			'url' => function($url, $ref, array $options = array())
-					use ($classes, &$request, $h) {
+			use ($classes, &$request, $h) {
 				$router = $classes['router'];
 				$options += array('absolute' => true);
 				$url = $router::match($url ?: '', $request, $options);
 				return $h ? str_replace('&amp;', '&', $h($url)) : $url;
 			},
 			'path' => function($path, $ref, array $options = array())
-					use ($classes, &$request, &$message) {
+			use ($classes, &$request, &$message) {
 				$embed = isset($options['embed']) && $options['embed'];
 				unset($options['embed']);
 				if ($embed) {
@@ -211,8 +211,8 @@ class File extends \lithium\template\view\adapter\File {
 	 * @param array $options Any options accepted by `template\View::render()`.
 	 * @return string Returns a the rendered template content as a string.
 	 */
-	protected function _render($type, $template, array $data = array(),
-					array $options = array()) {
+	protected function
+	_render($type, $template, array $data = array(), array $options = array()) {
 		$data += $this->_data;
 		$options = compact('template') + $options;
 		return $this->_view->render($type, $data, $options);

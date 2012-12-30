@@ -116,16 +116,16 @@ class Swift extends \li3_mailer\net\mail\Transport {
 		switch ($type) {
 			case 'mail':
 				$transport = Swift_MailTransport::newInstance();
-				break;
+			break;
 			case 'sendmail':
 				$transport = Swift_SendmailTransport::newInstance();
-				break;
+			break;
 			case 'smtp':
 				$transport = Swift_SmtpTransport::newInstance();
-				break;
+			break;
 			default:
 				$error = "Unknown transport type `{$type}` " .
-						"for `Swift` adapter.";
+					"for `Swift` adapter.";
 				throw new RuntimeException($error);
 		}
 		$blank = array_fill_keys((array) $this->_transport[$type], null);

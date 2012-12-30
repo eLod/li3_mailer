@@ -161,7 +161,7 @@ class Mailer extends \lithium\core\StaticObject {
 			$class = get_called_class();
 			$class = substr($class, strrpos($class, "\\") + 1);
 			$error = "Method `{$method}` not defined or handled " .
-					"in class `{$class}`.";
+				"in class `{$class}`.";
 			throw new BadMethodCallException($error);
 		}
 		$message = Inflector::underscore($args['message']);

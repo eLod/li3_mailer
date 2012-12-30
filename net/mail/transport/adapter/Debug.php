@@ -85,7 +85,7 @@ class Debug extends \li3_mailer\net\mail\Transport {
 				return String::insert($formatter, $data);
 			default:
 				$error = "Formatter for format `{$format}` " .
-						"is neither string nor closure.";
+					"is neither string nor closure.";
 				throw new RuntimeException($error);
 		}
 	}

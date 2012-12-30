@@ -166,8 +166,8 @@ class SimpleTest extends \lithium\test\Unit {
 	 * @see lithium\test\Unit::assertPattern()
 	 * @see lithium\test\Unit::_normalizeLineEndings()
 	 */
-	public function assertPatternRaw($expected, $result,
-						$message = '{:message}') {
+	public function
+	assertPatternRaw($expected, $result, $message = '{:message}') {
 		$pregResult = !!preg_match($expected, $result);
 		$this->assert($pregResult, $message, compact('expected', 'result'));
 	}

@@ -366,9 +366,9 @@ class Message extends \lithium\core\Object {
 	 * @see li3_mailer\net\mail\Message::ensureValidSender()
 	 */
 	public function ensureStandardCompliance() {
-	    $this->ensureValidDate();
-	    $this->ensureValidFrom();
-	    $this->ensureValidSender();
+		$this->ensureValidDate();
+		$this->ensureValidFrom();
+		$this->ensureValidSender();
 	}
 
 	/**
@@ -388,7 +388,7 @@ class Message extends \lithium\core\Object {
 		$numeric = is_int($this->date);
 		if (!$numeric || $this->date < 0 || $this->date > 2147483647) {
 			$error = "Invalid date timestamp `{$this->date}` " .
-					"set for `Message`.";
+				"set for `Message`.";
 			throw new RuntimeException($error);
 		}
 	 }
@@ -528,7 +528,7 @@ class Message extends \lithium\core\Object {
 			$assetPath = $media::asset($path, $options + $assetDefaults);
 			if ($assetPath === false) {
 				$error = "File at `{$path}` is not a valid asset, " .
-						"cannot attach.";
+					"cannot attach.";
 				throw new RuntimeException($error);
 			}
 			$attachPath = $path;
@@ -544,7 +544,7 @@ class Message extends \lithium\core\Object {
 			if (!is_string($options['data'])) {
 				$type = gettype($options['data']);
 				$error = "Data should be a string, `{$type}` given, " .
-						"cannot attach.";
+					"cannot attach.";
 				throw new RuntimeException($error);
 			}
 			if (isset($options['filename'])) {
