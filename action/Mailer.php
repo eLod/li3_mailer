@@ -143,7 +143,6 @@ class Mailer extends \lithium\core\StaticObject {
 	 * @see li3_mailer\action\Mailer::deliver()
 	 * @link http://php.net/manual/en/language.oop5.overloading.php PHP
 	 *       Manual: Overloading
-	 *
 	 * @throws BadMethodCallException On unhandled call, will
 	 *         throw an exception.
 	 * @param string $method Method name caught by `__callStatic()`.

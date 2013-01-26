@@ -590,7 +590,6 @@ class Message extends \lithium\core\Object {
 		return $this->_attachments;
 	}
 
-
 	/**
 	 * Embed content. Sets default options, calls `attach()` with it and
 	 * returns the Content-ID suitable for embedding.

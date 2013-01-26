@@ -68,8 +68,7 @@ class Media extends \lithium\core\StaticObject {
 	 * @return mixed If `$content` and `$options` are empty, returns the
 	 *         content-type. Otherwise returns `null`.
 	 */
-	public static
-	function type($type, $content = null, array $options = array()) {
+	public static function type($type, $content = null, array $options = array()) {
 		$defaults = array(
 			'view' => false,
 			'template' => false,
@@ -102,8 +101,7 @@ class Media extends \lithium\core\StaticObject {
 	 * @return void
 	 * @filter
 	 */
-	public static
-	function render(&$message, $data = null, array $options = array()) {
+	public static function render(&$message, $data = null, array $options = array()) {
 		$params = array('message' => &$message) + compact('data', 'options');
 		$handlers = static::_handlers();
 
@@ -191,8 +189,7 @@ class Media extends \lithium\core\StaticObject {
 	 *                `lithium\template\View`.
 	 * @filter
 	 */
-	public static
-	function view($handler, $data, &$message = null, array $options = array()) {
+	public static function view($handler, $data, &$message = null, array $options = array()) {
 		$params = array('message' => &$message);
 		$params += compact('handler', 'data', 'options');
 
