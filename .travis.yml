@@ -12,7 +12,7 @@ before_install:
   - git submodule update --init --recursive
   - cd libraries/lithium && git pull --rebase origin master
   - cd ../.. && git submodule add https://github.com/swiftmailer/swiftmailer.git libraries/swiftmailer
-  - cd app/libraries && git clone -b dev git://github.com/BlaineSch/li3_quality.git
+  - cd app/libraries && git clone git://github.com/UnionOfRAD/li3_quality.git
   - cd ..
   - sed '$d' config/bootstrap/libraries.php > config/bootstrap/testlibraries.php
   - echo "Libraries::add('li3_mailer');" >> config/bootstrap/testlibraries.php
