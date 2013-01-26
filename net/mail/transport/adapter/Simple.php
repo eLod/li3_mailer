@@ -59,6 +59,20 @@ class Simple extends \li3_mailer\net\mail\Transport {
 	 * @return mixed The return value of the `mail` function.
 	 */
 	public function deliver($message, array $options = array()) {
+		$mail = $this->_dependencies['mail'];
+		$to = $this->_address($message->to);
+		list($headers, $body) = $this->_generate($message);
+
+		return call_user_func($mail, $to, $message->subject, $body, $headers);
+	}
+
+	/**
+	 * Generate headers and body of a message in MIME format.
+	 *
+	 * @param object $message The message.
+	 * @return array Message headers and body in MIME format.
+	 */
+	protected function _generate($message) {
 		$headers = $message->headers;
 		foreach ($this->_messageAddresses as $property => $header) {
 			if (is_int($property)) {
@@ -136,10 +150,8 @@ class Simple extends \li3_mailer\net\mail\Transport {
 		$headers = join("\r\n", array_map(function($name, $value) {
 			return "{$name}: {$value}";
 		}, array_keys($headers), $headers));
-		$to = $this->_address($message->to);
 
-		$mail = $this->_dependencies['mail'];
-		return call_user_func($mail, $to, $message->subject, $body, $headers);
+		return array($headers, $body);
 	}
 }
 
