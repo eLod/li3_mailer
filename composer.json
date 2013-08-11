@@ -1,0 +1,23 @@
+{
+    "name": "eLod/li3_mailer",
+    "type": "lithium-library",
+    "description": "A plugin for sending email messages from your Lihtium application.",
+    "keywords": ["lithium", "li3", "email", "mailer"],
+    "homepage": "https://github.com/eLod/li3_mailer",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "eLod",
+            "homepage": "https://github.com/eLod"
+        }
+    ],
+    "require": {
+        "composer/installers": "*"
+    },
+    "require-dev": {
+        "swiftmailer/swiftmailer": "v4.3.0"
+    },
+    "suggest": {
+        "swiftmailer/swiftmailer": "To use the 'Swift' adapter with the plugin the SwiftMailer library must be installed."
+    }
+}
