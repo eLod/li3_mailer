@@ -127,13 +127,23 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 				$error = "Domain should not end with '/'.";
 				throw new RuntimeException($error);
 			}
-			$url = array($config['api'], $config['domain'], 'messages.mime');
+			$url = array($config['api'], $config['domain'], 'messages');
 			$url = join($url, "/");
 		}
 
-		$parameters = array('to' => $this->_address($message->to));
-		list($headers, $body) = $this->_generate($message);
-		$parameters['message'] = $headers . "\r\n" . $body;
+		foreach (array('to', 'from', 'cc', 'bcc') as $field) {
+			if (!$message->$field) {
+				continue;
+			}
+			$parameters[$field] = $this->_address($message->$field);
+		}
+
+		if ($text = $message->body('text')) {
+			$parameters += compact('text');
+		}
+		if ($html = $message->body('html')) {
+			$parameters += compact('html');
+		}
 		foreach ($this->_extraParameters as $name => $type) {
 			if (is_int($name)) {
 				$name = $type;
