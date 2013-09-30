@@ -3,6 +3,8 @@
 namespace li3_mailer\net\mail\transport\adapter;
 
 use RuntimeException;
+use lithium\net\http\Media;
+
 
 /**
  * The `Mailgun` adapter sends email through Mailgun's HTTP REST API.
@@ -55,7 +57,7 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 	 * @see http://php.net/curl
 	 * @param object $message The message to deliver.
 	 * @param array $options Options (see `_parameters()`).
-	 * @return mixed The return value of the `curl_exec` function.
+	 * @return string The message id on success; `false` on error.
 	 */
 	public function deliver($message, array $options = array()) {
 		list($url, $auth, $parameters) = $this->_parameters($message, $options);
@@ -77,7 +79,8 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 		}
 		curl_close($curl);
 
-		return $result;
+		$result = Media::decode('json', $result);
+		return $result['id'];
 	}
 
 	/**
