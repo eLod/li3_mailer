@@ -164,7 +164,6 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 
 		return array($url, $auth, $parameters);
 	}
-
 }
 
 ?>
