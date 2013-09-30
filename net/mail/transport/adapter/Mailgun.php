@@ -71,7 +71,7 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 		$curl->open();
 
 		$curl->set(CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		$curl->set(CURLOPT_USERPWD, "{$auth['user']}:{$auth['password']}");
+		$curl->set(CURLOPT_USERPWD, "{$auth['username']}:{$auth['password']}");
 		$curl->set(CURLOPT_RETURNTRANSFER, 1);
 
 		$curl->set(CURLOPT_CUSTOMREQUEST, 'POST');
@@ -160,7 +160,7 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 				$parameters['v:' . $name] = $val;
 			}
 		}
-		$auth = array('user' => 'api', 'password' => $config['key']);
+		$auth = array('username' => 'api', 'password' => $config['key']);
 
 		return array($url, $auth, $parameters);
 	}
