@@ -137,6 +137,9 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 			}
 			$parameters[$field] = $this->_address($message->$field);
 		}
+		if ($subject = $message->subject) {
+			$parameters += compact('subject');
+		}
 
 		if ($text = $message->body('text')) {
 			$parameters += compact('text');
