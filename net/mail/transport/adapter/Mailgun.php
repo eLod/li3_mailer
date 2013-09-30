@@ -65,13 +65,13 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 	 * @return mixed The return value of the `curl_exec` function.
 	 */
 	public function deliver($message, array $options = array()) {
-		list($url, $key, $parameters) = $this->_parameters($message, $options);
+		list($url, $auth, $parameters) = $this->_parameters($message, $options);
 
 		$curl = new $this->_classes['curl']();
 		$curl->open();
 
 		$curl->set(CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		$curl->set(CURLOPT_USERPWD, $key);
+		$curl->set(CURLOPT_USERPWD, "{$auth['user']}:{$auth['password']}");
 		$curl->set(CURLOPT_RETURNTRANSFER, 1);
 
 		$curl->set(CURLOPT_CUSTOMREQUEST, 'POST');
@@ -105,7 +105,7 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 	 * @see http://documentation.mailgun.net/api-sending.html
 	 * @param object $message The message to deliver.
 	 * @param array $options Given options.
-	 * @return array An array including the API URL, secret key and parameters.
+	 * @return array An array including the API URL, authentication credentials and parameters.
 	 */
 	protected function _parameters($message, array $options = array()) {
 		$defaults = array('api' => 'https://api.mailgun.net/v2');
@@ -160,8 +160,9 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 				$parameters['v:' . $name] = $val;
 			}
 		}
+		$auth = array('user' => 'api', 'password' => $config['key']);
 
-		return array($url, $config['key'], $parameters);
+		return array($url, $auth, $parameters);
 	}
 
 }
