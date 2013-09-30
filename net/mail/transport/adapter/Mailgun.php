@@ -42,13 +42,6 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 	);
 
 	/**
-	 * Classes used by `Mailgun`.
-	 *
-	 * @var array
-	 */
-	protected $_classes = array('curl' => 'lithium\net\socket\Curl');
-
-	/**
 	 * Deliver a message with Mailgun's HTTP REST API via curl.
 	 *
 	 * _NOTE: Uses the `messages.mime` API endpoint, not the
@@ -67,19 +60,22 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 	public function deliver($message, array $options = array()) {
 		list($url, $auth, $parameters) = $this->_parameters($message, $options);
 
-		$curl = new $this->_classes['curl']();
-		$curl->open();
+		$curl = curl_init($url);
 
-		$curl->set(CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		$curl->set(CURLOPT_USERPWD, "{$auth['username']}:{$auth['password']}");
-		$curl->set(CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt_array($curl, array(
+			CURLOPT_HTTPAUTH =>  CURLAUTH_BASIC,
+			CURLOPT_USERPWD => "{$auth['username']}:{$auth['password']}",
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_CUSTOMREQUEST => 'POST',
+			CURLOPT_POSTFIELDS => $parameters
+		));
+		$result = curl_exec($curl);
 
-		$curl->set(CURLOPT_CUSTOMREQUEST, 'POST');
-		$curl->set(CURLOPT_URL, $url);
-		$curl->set(CURLOPT_POSTFIELDS, $parameters);
-
-		$result = $curl->read();
-		$curl->close();
+		$info = curl_getinfo($curl);
+		if ($info['http_code'] != '200') {
+			$result = false;
+		}
+		curl_close($curl);
 
 		return $result;
 	}
