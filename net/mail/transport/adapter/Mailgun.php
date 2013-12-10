@@ -3,6 +3,8 @@
 namespace li3_mailer\net\mail\transport\adapter;
 
 use RuntimeException;
+use lithium\net\http\Media;
+
 
 /**
  * The `Mailgun` adapter sends email through Mailgun's HTTP REST API.
@@ -42,13 +44,6 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 	);
 
 	/**
-	 * Classes used by `Mailgun`.
-	 *
-	 * @var array
-	 */
-	protected $_classes = array('curl' => 'lithium\net\socket\Curl');
-
-	/**
 	 * Deliver a message with Mailgun's HTTP REST API via curl.
 	 *
 	 * _NOTE: Uses the `messages.mime` API endpoint, not the
@@ -62,26 +57,30 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 	 * @see http://php.net/curl
 	 * @param object $message The message to deliver.
 	 * @param array $options Options (see `_parameters()`).
-	 * @return mixed The return value of the `curl_exec` function.
+	 * @return string The message id on success; `false` on error.
 	 */
 	public function deliver($message, array $options = array()) {
-		list($url, $key, $parameters) = $this->_parameters($message, $options);
+		list($url, $auth, $parameters) = $this->_parameters($message, $options);
 
-		$curl = new $this->_classes['curl']();
-		$curl->open();
+		$curl = curl_init($url);
 
-		$curl->set(CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-		$curl->set(CURLOPT_USERPWD, $key);
-		$curl->set(CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt_array($curl, array(
+			CURLOPT_HTTPAUTH =>  CURLAUTH_BASIC,
+			CURLOPT_USERPWD => "{$auth['username']}:{$auth['password']}",
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_CUSTOMREQUEST => 'POST',
+			CURLOPT_POSTFIELDS => $parameters
+		));
+		$result = curl_exec($curl);
 
-		$curl->set(CURLOPT_CUSTOMREQUEST, 'POST');
-		$curl->set(CURLOPT_URL, $url);
-		$curl->set(CURLOPT_POSTFIELDS, $parameters);
+		$info = curl_getinfo($curl);
+		if ($info['http_code'] != '200') {
+			$result = false;
+		}
+		curl_close($curl);
 
-		$result = $curl->read();
-		$curl->close();
-
-		return $result;
+		$result = Media::decode('json', $result);
+		return $result['id'];
 	}
 
 	/**
@@ -105,7 +104,7 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 	 * @see http://documentation.mailgun.net/api-sending.html
 	 * @param object $message The message to deliver.
 	 * @param array $options Given options.
-	 * @return array An array including the API URL, secret key and parameters.
+	 * @return array An array including the API URL, authentication credentials and parameters.
 	 */
 	protected function _parameters($message, array $options = array()) {
 		$defaults = array('api' => 'https://api.mailgun.net/v2');
@@ -131,13 +130,26 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 				$error = "Domain should not end with '/'.";
 				throw new RuntimeException($error);
 			}
-			$url = array($config['api'], $config['domain'], 'messages.mime');
+			$url = array($config['api'], $config['domain'], 'messages');
 			$url = join($url, "/");
 		}
 
-		$parameters = array('to' => $this->_address($message->to));
-		list($headers, $body) = $this->_generate($message);
-		$parameters['message'] = $headers . "\r\n" . $body;
+		foreach (array('to', 'from', 'cc', 'bcc') as $field) {
+			if (!$message->$field) {
+				continue;
+			}
+			$parameters[$field] = $this->_address($message->$field);
+		}
+		if ($subject = $message->subject) {
+			$parameters += compact('subject');
+		}
+
+		if ($text = $message->body('text')) {
+			$parameters += compact('text');
+		}
+		if ($html = $message->body('html')) {
+			$parameters += compact('html');
+		}
 		foreach ($this->_extraParameters as $name => $type) {
 			if (is_int($name)) {
 				$name = $type;
@@ -160,10 +172,10 @@ class Mailgun extends \li3_mailer\net\mail\transport\adapter\Simple {
 				$parameters['v:' . $name] = $val;
 			}
 		}
+		$auth = array('username' => 'api', 'password' => $config['key']);
 
-		return array($url, $config['key'], $parameters);
+		return array($url, $auth, $parameters);
 	}
-
 }
 
 ?>

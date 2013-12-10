@@ -4,7 +4,7 @@ namespace li3_mailer\template;
 
 use lithium\core\Object;
 use lithium\core\Libraries;
-
+use lithium\g11n\Message;
 /**
  * The `Mail` is a special `View` class that is responsible for rendering
  * (mail) message bodies and providing helpers.
@@ -39,6 +39,7 @@ class Mail extends \lithium\template\View {
 	 */
 	protected function _init() {
 		Object::_init();
+		extract(Message::aliases());
 
 		$type = isset($this->_config['type']) ? $this->_config['type'] : null;
 		if ($type === 'text') {
@@ -52,7 +53,10 @@ class Mail extends \lithium\template\View {
 				return htmlspecialchars((string) $data, ENT_QUOTES, $encoding);
 			};
 		}
-		$this->outputFilters += compact('h') + $this->_config['outputFilters'];
+		$t = function($data, array $options = array()) use ($t) {
+			echo $t((string) $data, $options);
+		};
+		$this->outputFilters += compact('h', 't') + $this->_config['outputFilters'];
 
 		foreach (array('loader', 'renderer') as $key) {
 			if (is_object($this->_config[$key])) {
