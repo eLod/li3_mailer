@@ -49,6 +49,8 @@ class Swift extends \li3_mailer\net\mail\Transport {
 		)
 	);
 
+	protected $_message;
+
 	/**
 	 * Message property names for translating a `li3_mailer\net\mail\Message`
 	 * to `Swift_Message`.
@@ -89,8 +91,16 @@ class Swift extends \li3_mailer\net\mail\Transport {
 	 */
 	public function deliver($message, array $options = array()) {
 		$transport = $this->_transport($options);
-		$message = $this->_message($message);
-		return $transport->send($message);
+		$this->_message = $this->_message($message);
+		return $transport->send($this->_message);
+	}
+
+	/**
+	 * Allows read access to the SiwftMailer message object after it's
+	 * been delivered.
+	 */
+	public function getMessage() {
+		return $this->_message;
 	}
 
 	/**
